@@ -1,0 +1,701 @@
+/* =========================
+   RESET
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fb;
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar {
+    width: 100%;
+    height: 65px;
+
+    background: #1e3a8a;
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 60px;
+
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.12);
+
+    position: relative;
+    z-index: 1000;
+}
+
+
+/* =========================
+   EVENTGATE BRAND
+========================= */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: white !important;
+    text-decoration: none;
+
+    font-size: 21px;
+    font-weight: 700;
+
+    flex-shrink: 0;
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: white;
+    color: #1e3a8a !important;
+
+    border-radius: 10px;
+
+    font-size: 19px;
+    font-weight: 800;
+}
+
+
+/* =========================
+   NAV LINKS
+========================= */
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    transition: opacity 0.2s ease;
+}
+
+.nav-links a:hover {
+    opacity: 0.75;
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+.nav-links button {
+    border: none;
+
+    background: #ef4444;
+    color: white;
+
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.nav-links button:hover {
+    background: #dc2626;
+}
+
+
+/* =========================
+   HAMBURGER
+========================= */
+
+.menu-toggle {
+    display: none;
+
+    width: 42px;
+    height: 42px;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+    gap: 5px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    cursor: pointer;
+}
+
+.menu-toggle span {
+    width: 21px;
+    height: 2px;
+
+    background: white;
+
+    border-radius: 5px;
+
+    transition: 0.25s ease;
+}
+
+
+/* =========================
+   VERIFY SECTION
+========================= */
+
+.verify-section {
+    width: 100%;
+    max-width: 700px;
+
+    margin: 0 auto;
+
+    padding: 55px 20px 60px;
+
+    position: relative;
+    z-index: 1;
+}
+
+
+/* =========================
+   VERIFY HEADER
+========================= */
+
+.verify-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.verify-header h1 {
+    font-size: 32px;
+    color: #1e293b;
+
+    margin-bottom: 10px;
+}
+
+.verify-header p {
+    color: #64748b;
+    font-size: 15px;
+}
+
+
+/* =========================
+   VERIFY CARD
+========================= */
+
+.verify-card {
+    width: 100%;
+
+    background: white;
+
+    padding: 35px;
+
+    border-radius: 18px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.07);
+}
+
+
+/* =========================
+   VERIFY FORM
+========================= */
+
+#verifyForm {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+#ticketId {
+    flex: 1;
+
+    height: 50px;
+
+    padding: 0 16px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 9px;
+
+    font-size: 15px;
+
+    outline: none;
+}
+
+#ticketId:focus {
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+#verifyForm button {
+    height: 50px;
+
+    padding: 0 22px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+#verifyForm button:hover {
+    background: #1d4ed8;
+}
+
+
+/* =========================
+   VERIFICATION RESULT
+========================= */
+
+#verifyResult {
+    margin-top: 25px;
+}
+
+
+/* =========================
+   LOADING
+========================= */
+
+.verify-loading {
+    text-align: center;
+
+    padding: 25px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    border-radius: 12px;
+
+    font-weight: 600;
+}
+
+
+/* =========================
+   INVALID TICKET
+========================= */
+
+.verify-error {
+    background: #fef2f2;
+
+    border: 1px solid #fecaca;
+
+    border-radius: 14px;
+
+    padding: 25px;
+
+    text-align: center;
+}
+
+.verify-error h3 {
+    color: #dc2626;
+
+    margin-bottom: 10px;
+}
+
+.verify-error p {
+    color: #991b1b;
+}
+
+
+/* =========================
+   VALID TICKET
+========================= */
+
+.verify-success {
+    background: #f0fdf4;
+
+    border: 1px solid #bbf7d0;
+
+    border-radius: 16px;
+
+    padding: 28px;
+
+    margin-top: 20px;
+}
+
+.verify-success h3 {
+    color: #15803d;
+
+    font-size: 23px;
+
+    margin-bottom: 8px;
+}
+
+.valid-message {
+    color: #166534;
+
+    margin-bottom: 22px;
+}
+
+
+/* =========================
+   TICKET INFORMATION
+========================= */
+
+.verified-ticket {
+    background: white;
+
+    border: 1px solid #e2e8f0;
+
+    border-radius: 12px;
+
+    padding: 20px;
+}
+
+.verified-ticket p {
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 12px 0;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    color: #475569;
+
+    font-size: 14px;
+}
+
+.verified-ticket p:last-child {
+    border-bottom: none;
+}
+
+.verified-ticket strong {
+    color: #1e293b;
+}
+
+
+/* =========================
+   CHECK-IN BUTTON
+========================= */
+
+.check-in-btn {
+    width: 100%;
+
+    margin-top: 20px;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background: #16a34a;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+.check-in-btn:hover {
+    background: #15803d;
+
+    transform: translateY(-1px);
+}
+
+.check-in-btn:disabled {
+    opacity: 0.7;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 900px) {
+
+    .navbar {
+        padding: 0 30px;
+    }
+
+    .nav-links {
+        gap: 18px;
+    }
+
+    .verify-section {
+        max-width: 650px;
+
+        padding-top: 45px;
+    }
+}
+
+
+/* =========================
+   MOBILE NAVBAR
+========================= */
+
+@media (max-width: 650px) {
+
+    .navbar {
+        height: 65px;
+
+        padding: 0 18px;
+
+        display: flex;
+
+        flex-direction: row;
+
+        justify-content: space-between;
+
+        align-items: center;
+    }
+
+    .brand {
+        font-size: 18px;
+
+        gap: 8px;
+    }
+
+    .brand-icon {
+        width: 34px;
+        height: 34px;
+
+        border-radius: 9px;
+
+        font-size: 18px;
+    }
+
+    /* Show hamburger */
+
+    .menu-toggle {
+        display: flex;
+    }
+
+    /* Hide menu */
+
+    .nav-links {
+        position: absolute;
+
+        top: 65px;
+
+        left: 0;
+        right: 0;
+
+        width: 100%;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 5px;
+
+        padding: 15px 18px;
+
+        background: #1e3a8a;
+
+        box-shadow:
+            0 10px 20px rgba(0, 0, 0, 0.15);
+
+        opacity: 0;
+
+        visibility: hidden;
+
+        transform: translateY(-10px);
+
+        transition: 0.2s ease;
+
+        z-index: 999;
+    }
+
+    /* Open menu */
+
+    .nav-links.active {
+        opacity: 1;
+
+        visibility: visible;
+
+        transform: translateY(0);
+    }
+
+    .nav-links a {
+        width: 100%;
+
+        padding: 13px 12px;
+
+        border-radius: 7px;
+    }
+
+    .nav-links a:hover {
+        background: rgba(255, 255, 255, 0.1);
+
+        opacity: 1;
+    }
+
+    .nav-links button {
+        width: 100%;
+
+        margin-top: 7px;
+    }
+
+
+    /* Hamburger → X */
+
+    .menu-toggle.active span:nth-child(1) {
+        transform:
+            translateY(7px)
+            rotate(45deg);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+        transform:
+            translateY(-7px)
+            rotate(-45deg);
+    }
+
+
+    /* =========================
+       VERIFY MOBILE
+    ========================= */
+
+    .verify-section {
+        width: 100%;
+
+        padding: 40px 15px 50px;
+
+        margin: 0 auto;
+    }
+
+    .verify-header {
+        margin-bottom: 25px;
+    }
+
+    .verify-header h1 {
+        font-size: 27px;
+    }
+
+    .verify-header p {
+        font-size: 14px;
+
+        line-height: 1.5;
+    }
+
+    .verify-card {
+        padding: 22px 18px;
+
+        border-radius: 15px;
+    }
+
+    #verifyForm {
+        flex-direction: column;
+
+        width: 100%;
+    }
+
+    #ticketId {
+        width: 100%;
+
+        flex: none;
+    }
+
+    #verifyForm button {
+        width: 100%;
+    }
+
+    .verify-success {
+        padding: 20px;
+    }
+
+    .verified-ticket {
+        padding: 15px;
+    }
+
+    .verified-ticket p {
+        flex-direction: column;
+
+        gap: 4px;
+
+        padding: 10px 0;
+    }
+}
+
+
+/* =========================
+   SMALL PHONES
+========================= */
+
+@media (max-width: 400px) {
+
+    .brand {
+        font-size: 17px;
+    }
+
+    .brand-icon {
+        width: 32px;
+        height: 32px;
+
+        font-size: 17px;
+    }
+
+    .verify-header h1 {
+        font-size: 24px;
+    }
+
+    .verify-card {
+        padding: 18px 14px;
+    }
+
+    .verify-success {
+        padding: 16px;
+    }
+}

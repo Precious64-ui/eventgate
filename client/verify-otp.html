@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verify Email | EventGate</title>
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="verify-otp.css">
+</head>
+
+<body>
+
+    <main class="verify-page">
+
+        <div class="verify-card">
+
+            <!-- LOGO -->
+            <div class="brand-logo">
+
+                <div class="brand-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+
+                <span>EventGate</span>
+
+            </div>
+
+
+            <!-- ICON -->
+            <div class="verify-icon">
+                <i class="fas fa-envelope-circle-check"></i>
+            </div>
+
+
+            <!-- HEADER -->
+            <div class="verify-header">
+
+                <h1>Verify your email</h1>
+
+                <p>
+                    We've sent a 6-digit verification code
+                    to your email address.
+                </p>
+
+            </div>
+
+
+            <!-- FORM -->
+            <form id="verifyForm">
+
+                <!-- OTP INPUT -->
+                <div class="input-group">
+
+                    <label for="otp">
+                        Verification code
+                    </label>
+
+                    <div class="input-wrapper">
+
+                        <i class="fas fa-shield-halved"></i>
+
+                        <input
+                            type="text"
+                            id="otp"
+                            placeholder="Enter 6-digit code"
+                            maxlength="6"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- VERIFY BUTTON -->
+                <button
+                    type="submit"
+                    class="verify-btn"
+                >
+                    <span>Verify Email</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+
+                <!-- MESSAGE -->
+                <p id="message"></p>
+
+
+                <!-- RESEND -->
+                <div class="resend-section">
+
+                    <p>Didn't receive the code?</p>
+
+                    <button
+                        type="button"
+                        id="resendOTP"
+                        class="resend-btn"
+                    >
+                        <i class="fas fa-rotate-right"></i>
+                        <span>Resend verification code</span>
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- FOOTER -->
+            <div class="verify-footer">
+
+                <p>
+                    Already verified?
+                    <a href="login.html">
+                        Login
+                    </a>
+                </p>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <script src="verify-otp.js"></script>
+
+</body>
+
+</html>

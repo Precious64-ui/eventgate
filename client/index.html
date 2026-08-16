@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <title>EventGate | Upcoming Events</title>
+
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+   <nav class="navbar">
+
+    <a href="index.html" class="brand">
+         <div class="brand-icon">
+    <i class="fas fa-calendar-check"></i>
+    </div>
+        <span>EventGate</span>
+    </a>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="index.html">Events</a>
+
+        <a href="my-tickets.html">My Tickets</a>
+
+        <a href="admin.html" id="adminLink">
+            Admin Dashboard
+        </a>
+
+        <button id="logoutBtn">
+            Logout
+        </button>
+
+    </div>
+
+</nav>
+
+
+    <!-- Hero Section -->
+    <header class="hero">
+
+        <div class="hero-content">
+
+            <h1>Find Amazing Events Near You</h1>
+
+            <p>
+                Discover concerts, conferences, parties and more.
+                Book your tickets today.
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- Events Section -->
+    <section class="events">
+
+        <div class="events-header">
+
+    <h2>Upcoming Events</h2>
+
+    <p>
+        Explore our latest events and book your ticket.
+    </p>
+
+    <div class="event-filters">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="🔎 Search events..."
+        >
+
+        <select id="locationFilter">
+
+            <option value="all">
+                All Locations
+            </option>
+
+        </select>
+
+    </div>
+
+</div>
+
+
+        <!-- Events will be loaded from MongoDB -->
+        <div id="eventContainer" class="event-container">
+
+            <p class="loading">
+                Loading events...
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- Booking Modal -->
+<div id="bookingModal" class="modal">
+
+    <div class="modal-content">
+
+        <button id="closeModal" class="close-btn">
+            &times;
+        </button>
+
+        <h2>Book Your Ticket</h2>
+
+        <h3 id="bookingEventTitle"></h3>
+
+        <p>
+            Ticket price:
+            <strong id="bookingPrice"></strong>
+        </p>
+
+        <div class="quantity-control">
+
+            <button id="decreaseQty">−</button>
+
+            <span id="ticketQuantity">1</span>
+
+            <button id="increaseQty">+</button>
+
+        </div>
+
+        <p class="total">
+            Total:
+            <strong id="bookingTotal"></strong>
+        </p>
+
+        <div class="modal-actions">
+
+            <button id="cancelBooking" class="cancel-btn">
+                Cancel
+            </button>
+
+            <button id="confirmBooking" class="confirm-btn">
+                Confirm Booking
+            </button>
+
+        </div>
+
+        <p id="bookingMessage"></p>
+
+    </div>
+
+</div>
+
+    <!-- JavaScript -->
+    <script src="dashboard.js"></script>
+
+</body>
+</html>

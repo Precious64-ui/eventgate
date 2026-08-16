@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard |EventGate</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+    <!-- =========================
+         NAVIGATION
+    ========================== -->
+
+  <nav class="navbar">
+
+    <a href="index.html" class="brand">
+         <div class="brand-icon">
+    <i class="fas fa-calendar-check"></i>
+    </div>
+        <span>EventGate</span>
+    </a>
+
+    <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Open menu"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="index.html">Events</a>
+
+        <a href="my-tickets.html">My Tickets</a>
+
+        <a href="admin.html">Admin Dashboard</a>
+
+        <a href="verify-ticket.html">Verify Ticket</a>
+
+        <button id="logoutBtn">
+            Logout
+        </button>
+
+    </div>
+
+</nav>
+
+
+    <!-- =========================
+         ADMIN DASHBOARD
+    ========================== -->
+
+    <section class="admin-section">
+
+
+        <!-- =========================
+             STATISTICS
+        ========================== -->
+
+        <div class="admin-stats">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    🎫
+                </div>
+
+                <div>
+                    <p>Total Events</p>
+                    <h2 id="totalEvents">0</h2>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    🎟️
+                </div>
+
+                <div>
+                    <p>Tickets Sold</p>
+                    <h2 id="totalTicketsSold">0</h2>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    👥
+                </div>
+
+                <div>
+                    <p>Total Users</p>
+                    <h2 id="totalUsers">0</h2>
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    💰
+                </div>
+
+                <div>
+                    <p>Total Revenue</p>
+                    <h2 id="totalRevenue">₦0</h2>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             RECENT BOOKINGS
+        ========================== -->
+
+        <div class="recent-bookings">
+
+            <div class="recent-header">
+
+                <div>
+
+                    <h2>
+                        Recent Bookings
+                    </h2>
+
+                    <p>
+                        Latest tickets purchased by users
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div id="recentBookingsList">
+
+                <p class="loading-bookings">
+                    Loading recent bookings...
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             CREATE EVENT
+        ========================== -->
+
+        <h1>
+            Create New Event
+        </h1>
+
+
+        <div class="form-card">
+
+            <form id="eventForm">
+
+                <input
+                    type="text"
+                    id="title"
+                    placeholder="Event Title"
+                    required
+                >
+
+
+                <textarea
+                    id="description"
+                    placeholder="Event Description"
+                    required
+                ></textarea>
+
+
+                <input
+                    type="text"
+                    id="location"
+                    placeholder="Location"
+                    required
+                >
+
+
+                <input
+                    type="date"
+                    id="date"
+                    required
+                >
+
+
+                <input
+                    type="text"
+                    id="time"
+                    placeholder="Time e.g. 7:00 PM"
+                    required
+                >
+
+
+                <input
+                    type="number"
+                    id="price"
+                    placeholder="Ticket Price"
+                    min="0"
+                    required
+                >
+
+
+                <input
+                    type="number"
+                    id="availableTickets"
+                    placeholder="Available Tickets"
+                    min="1"
+                    required
+                >
+
+
+                <input
+                    type="text"
+                    id="image"
+                    placeholder="Image URL"
+                >
+
+
+                <button type="submit">
+                    Create Event
+                </button>
+
+            </form>
+
+
+            <p id="message"></p>
+
+        </div>
+
+
+        <!-- =========================
+             EDIT EVENT
+        ========================== -->
+
+        <div
+            id="editSection"
+            class="form-card"
+            style="display: none; margin-top: 30px;"
+        >
+
+            <h2>
+                Edit Event
+            </h2>
+
+
+            <form id="editEventForm">
+
+                <input
+                    type="hidden"
+                    id="editId"
+                >
+
+
+                <input
+                    type="text"
+                    id="editTitle"
+                    placeholder="Event Title"
+                    required
+                >
+
+
+                <textarea
+                    id="editDescription"
+                    placeholder="Event Description"
+                    required
+                ></textarea>
+
+
+                <input
+                    type="text"
+                    id="editLocation"
+                    placeholder="Location"
+                    required
+                >
+
+
+                <input
+                    type="date"
+                    id="editDate"
+                    required
+                >
+
+
+                <input
+                    type="text"
+                    id="editTime"
+                    placeholder="Time"
+                    required
+                >
+
+
+                <input
+                    type="number"
+                    id="editPrice"
+                    placeholder="Ticket Price"
+                    min="0"
+                    required
+                >
+
+
+                <input
+                    type="number"
+                    id="editAvailableTickets"
+                    placeholder="Available Tickets"
+                    min="1"
+                    required
+                >
+
+
+                <input
+                    type="text"
+                    id="editImage"
+                    placeholder="Image URL"
+                >
+
+
+                <button type="submit">
+                    Update Event
+                </button>
+
+
+                <button
+                    type="button"
+                    id="cancelEdit"
+                >
+                    Cancel
+                </button>
+
+            </form>
+
+
+            <p id="editMessage"></p>
+
+        </div>
+
+
+        <hr>
+
+
+        <!-- =========================
+             MANAGE EVENTS
+        ========================== -->
+
+        <h2>
+            Manage Events
+        </h2>
+
+
+        <div
+            id="adminEvents"
+            class="admin-events"
+        >
+
+            <p>
+                Loading events...
+            </p>
+
+        </div>
+
+
+    </section>
+
+
+    <script src="admin.js"></script>
+
+</body>
+
+</html>

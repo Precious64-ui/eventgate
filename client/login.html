@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login | EventGate</title>
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+    <main class="login-page">
+
+        <!-- LEFT SIDE -->
+        <section class="login-brand">
+
+            <div class="brand-logo">
+                <div class="brand-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+
+                <span>EventGate</span>
+            </div>
+
+            <div class="brand-content">
+
+                <h1>
+                    Welcome to
+                    <span>EventGate</span>
+                </h1>
+
+                <p>
+                    Your gateway to unforgettable events.
+                    Discover events, book your tickets, and
+                    keep everything in one place.
+                </p>
+
+                <div class="brand-features">
+
+                    <div class="feature">
+                        <i class="fas fa-ticket"></i>
+                        <span>Easy ticket booking</span>
+                    </div>
+
+                    <div class="feature">
+                        <i class="fas fa-qrcode"></i>
+                        <span>Secure digital tickets</span>
+                    </div>
+
+                    <div class="feature">
+                        <i class="fas fa-calendar-days"></i>
+                        <span>Discover amazing events</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT SIDE -->
+        <section class="login-section">
+
+            <div class="login-card">
+
+                <div class="mobile-logo">
+
+                    <div class="brand-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+
+                    <span>EventGate</span>
+
+                </div>
+
+
+                <div class="login-header">
+
+                    <h2>Welcome back</h2>
+
+                    <p>
+                        Login to continue to your EventGate account.
+                    </p>
+
+                </div>
+
+
+                <form id="loginForm">
+
+                    <!-- EMAIL -->
+
+                    <div class="input-group">
+
+                        <label for="email">
+                            Email address
+                        </label>
+
+                        <div class="input-wrapper">
+
+                            <i class="fas fa-envelope"></i>
+
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="input-group">
+
+    <div class="password-label-row">
+
+        <label for="password">
+            Password
+        </label>
+
+        <a href="forgot-password.html" class="forgot-link">
+                  Forgot password?
+        </a>
+
+    </div>
+
+    <div class="input-wrapper">
+
+        <i class="fas fa-lock"></i>
+
+        <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            placeholder="Enter your password" 
+            required 
+        >
+
+        <button 
+            type="button" 
+            class="password-toggle" 
+            id="togglePassword"
+        >
+            <i class="fas fa-eye"></i>
+        </button>
+
+    </div>
+
+</div>
+
+
+                    <!-- LOGIN BUTTON -->
+
+                    <button
+                        type="submit"
+                        class="login-btn"
+                    >
+                        <span>Login</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+
+                    <!-- MESSAGE -->
+
+                    <p id="loginMessage"></p>
+
+                </form>
+
+
+                <div class="login-footer">
+
+                    <p>
+                        Don't have an account?
+                        <a href="register.html">
+                            Create account
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="login.js"></script>
+
+</body>
+</html>

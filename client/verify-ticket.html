@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Verify Ticket | EventGate</title>
+    <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="Verifyticket.css">
+
+</head>
+
+<body>
+
+    <nav>
+
+       <nav class="navbar">
+
+    <a href="index.html" class="brand">
+    <span class="brand-icon">
+        <i class="fas fa-calendar-check"></i>
+    </span>
+
+    <span>EventGate</span>
+</a>
+
+    <button
+        class="menu-toggle"
+        id="menuToggle"
+        aria-label="Open menu"
+    >
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="nav-links" id="navLinks">
+
+        <a href="index.html">Events</a>
+
+        <a href="my-tickets.html">My Tickets</a>
+
+        <a href="admin.html">Admin Dashboard</a>
+
+        <a href="verify-ticket.html">Verify Ticket</a>
+
+        <button id="logoutBtn">
+            Logout
+        </button>
+
+    </div>
+
+</nav>
+
+
+    <section class="verify-section">
+
+        <div class="verify-card">
+
+            <h1>🎟️ Verify Ticket</h1>
+
+            <p>
+                Enter the ticket ID to verify a customer's ticket.
+            </p>
+
+
+            <form id="verifyForm">
+
+                <input
+                    type="text"
+                    id="ticketId"
+                    placeholder="e.g. EVT-7F3K92LA"
+                    required
+                >
+
+                <button type="submit">
+                    Verify Ticket
+                </button>
+
+            </form>
+
+
+            <div id="verifyResult"></div>
+
+        </div>
+
+    </section>
+
+
+    <script src="verify-ticket.js"></script>
+
+</body>
+
+</html>
