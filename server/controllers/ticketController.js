@@ -1,6 +1,6 @@
 
 const Ticket = require("../models/Ticket");
-const Event = require("../models/Event");
+const Event = require("../models/event");
 
 
 // =========================
