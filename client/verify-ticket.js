@@ -62,7 +62,7 @@ form.addEventListener("submit", async (e) => {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/tickets/verify/${encodeURIComponent(ticketId)}`,
+            `https://eventgate-fxp8.onrender.com/api/tickets/verify/${encodeURIComponent(ticketId)}`,
             {
                 method: "GET",
 
@@ -217,7 +217,7 @@ verifyResult.addEventListener("click", async (e) => {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/tickets/check-in/${encodeURIComponent(ticketId)}`,
+            `https://eventgate-fxp8.onrender.com/api/tickets/check-in/${encodeURIComponent(ticketId)}`,
             {
                 method: "PATCH",
 

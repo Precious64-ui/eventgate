@@ -69,13 +69,13 @@ async function loadTickets() {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/tickets/my-tickets",
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
-            }
-        );
+    "https://eventgate-fxp8.onrender.com/api/tickets/my-tickets",
+    {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    }
+);
 
 
         if (!response.ok) {

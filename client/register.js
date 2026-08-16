@@ -14,7 +14,7 @@ form.addEventListener("submit", async (e) => {
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/users/register",
+            "https://eventgate-fxp8.onrender.com/api/users/register",
             {
                 method: "POST",
 

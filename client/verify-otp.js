@@ -67,7 +67,7 @@ form.addEventListener("submit", async (e) => {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/users/verify-otp",
+            "https://eventgate-fxp8.onrender.com/api/users/verify-otp",
             {
                 method: "POST",
 
@@ -158,7 +158,7 @@ if (resendButton) {
         try {
 
             const response = await fetch(
-                "http://localhost:5000/api/users/resend-otp",
+                "https://eventgate-fxp8.onrender.com/api/users/resend-otp",
                 {
                     method: "POST",
 

@@ -77,7 +77,7 @@ async function loadEvents() {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/events"
+            "https://eventgate-fxp8.onrender.com/api/events"
         );
 
         if (!response.ok) {
@@ -521,7 +521,7 @@ confirmBooking.addEventListener(
 
             const response =
                 await fetch(
-                    "http://localhost:5000/api/tickets/book",
+                    "https://eventgate-fxp8.onrender.com/api/tickets/book",
                     {
                         method: "POST",
 

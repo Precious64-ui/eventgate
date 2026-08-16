@@ -71,7 +71,7 @@ form.addEventListener("submit", async (e) => {
 
     try {
         const response = await fetch(
-            "http://localhost:5000/api/events",
+            "https://eventgate-fxp8.onrender.com/api/events",
             {
                 method: "POST",
 
@@ -116,7 +116,7 @@ const adminEvents = document.getElementById("adminEvents");
 async function loadAdminEvents() {
     try {
         const response = await fetch(
-            "http://localhost:5000/api/events"
+            "https://eventgate-fxp8.onrender.com/api/events"
         );
 
         const events = await response.json();
@@ -223,7 +223,7 @@ adminEvents.addEventListener("click", async (e) => {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/events/${eventId}`,
+            `https://eventgate-fxp8.onrender.com/api/events/${eventId}`,
             {
                 method: "DELETE",
 
@@ -267,7 +267,7 @@ adminEvents.addEventListener("click", async (e) => {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/events"
+            "https://eventgate-fxp8.onrender.com/api/events"
         );
 
         const events = await response.json();
@@ -335,7 +335,7 @@ editEventForm.addEventListener("submit", async (e) => {
     try {
 
         const response = await fetch(
-            `http://localhost:5000/api/events/${eventId}`,
+            `https://eventgate-fxp8.onrender.com/api/events/${eventId}`,
             {
                 method: "PUT",
 
@@ -401,7 +401,7 @@ async function loadAdminStats() {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/events/admin-stats",
+            "https://eventgate-fxp8.onrender.com/api/events/admin-stats",
             {
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -454,7 +454,7 @@ async function loadRecentBookings() {
     try {
 
         const response = await fetch(
-            "http://localhost:5000/api/events/recent-bookings",
+            "https://eventgate-fxp8.onrender.com/api/events/recent-bookings",
             {
                 headers: {
                     "Authorization": `Bearer ${token}`

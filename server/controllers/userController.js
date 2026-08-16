@@ -18,6 +18,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Check email configuration
 transporter.verify((error) => {
     if (error) {
         console.error("Email configuration failed:", error);
@@ -37,14 +38,25 @@ const registerUser = async (req, res) => {
 
         const { name, email, password } = req.body;
 
-      const normalizedEmail = email.trim().toLowerCase();
+        // Basic validation
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                message: "Please provide name, email and password."
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
 
         // Check if user already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser =
+            await User.findOne({
+                email: normalizedEmail
+            });
 
         if (existingUser) {
 
-            // Allow an unverified account to request a new OTP
+            // Allow unverified user to request a new OTP
             if (!existingUser.isVerified) {
 
                 const otp = Math.floor(
@@ -54,14 +66,21 @@ const registerUser = async (req, res) => {
                 existingUser.verificationOTP = otp;
 
                 existingUser.verificationOTPExpires =
-                    new Date(Date.now() + 10 * 60 * 1000);
+                    new Date(
+                        Date.now() + 10 * 60 * 1000
+                    );
 
                 await existingUser.save();
 
                 await transporter.sendMail({
-                    from: `"EventGate" <${process.env.EMAIL_USER}>`,
-                    to: email,
-                    subject: "Your EventGate Verification Code",
+
+                    from:
+                        `"EventGate" <${process.env.EMAIL_USER}>`,
+
+                    to: normalizedEmail,
+
+                    subject:
+                        "Your EventGate Verification Code",
 
                     html: `
                         <div style="
@@ -128,7 +147,9 @@ const registerUser = async (req, res) => {
 
         // OTP expires in 10 minutes
         const otpExpires =
-            new Date(Date.now() + 10 * 60 * 1000);
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
 
 
         // Create user
@@ -136,7 +157,7 @@ const registerUser = async (req, res) => {
 
             name,
 
-            email,
+            email: normalizedEmail,
 
             password: hashedPassword,
 
@@ -152,11 +173,13 @@ const registerUser = async (req, res) => {
         // Send verification email
         await transporter.sendMail({
 
-            from: `"EventGate" <${process.env.EMAIL_USER}>`,
+            from:
+                `"EventGate" <${process.env.EMAIL_USER}>`,
 
-            to: email,
+            to: normalizedEmail,
 
-            subject: "Verify Your EventGate Account",
+            subject:
+                "Verify Your EventGate Account",
 
             html: `
                 <div style="
@@ -204,7 +227,10 @@ const registerUser = async (req, res) => {
                         <strong>10 minutes</strong>.
                     </p>
 
-                    <p style="color: #64748b; font-size: 13px;">
+                    <p style="
+                        color: #64748b;
+                        font-size: 13px;
+                    ">
                         If you didn't create this account,
                         you can safely ignore this email.
                     </p>
@@ -227,7 +253,6 @@ const registerUser = async (req, res) => {
         });
 
 
-        // Successful response
         res.status(201).json({
 
             message:
@@ -247,7 +272,10 @@ const registerUser = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Registration error:", error);
+        console.error(
+            "Registration error:",
+            error
+        );
 
         res.status(500).json({
 
@@ -271,7 +299,20 @@ const verifyOTP = async (req, res) => {
 
         const { email, otp } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email || !otp) {
+            return res.status(400).json({
+                message:
+                    "Email and verification code are required."
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
 
         if (!user) {
 
@@ -291,7 +332,6 @@ const verifyOTP = async (req, res) => {
         }
 
 
-        // Check OTP
         if (user.verificationOTP !== otp) {
 
             return res.status(400).json({
@@ -301,7 +341,6 @@ const verifyOTP = async (req, res) => {
         }
 
 
-        // Check expiration
         if (
             !user.verificationOTPExpires ||
             user.verificationOTPExpires < new Date()
@@ -315,7 +354,6 @@ const verifyOTP = async (req, res) => {
         }
 
 
-        // Verify user
         user.isVerified = true;
 
         user.verificationOTP = undefined;
@@ -334,7 +372,10 @@ const verifyOTP = async (req, res) => {
 
     } catch (error) {
 
-        console.error("OTP verification error:", error);
+        console.error(
+            "OTP verification error:",
+            error
+        );
 
         res.status(500).json({
 
@@ -358,7 +399,19 @@ const resendOTP = async (req, res) => {
 
         const { email } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required."
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
 
         if (!user) {
 
@@ -369,8 +422,6 @@ const resendOTP = async (req, res) => {
         }
 
 
-        // Already verified
-
         if (user.isVerified) {
 
             return res.status(400).json({
@@ -380,33 +431,31 @@ const resendOTP = async (req, res) => {
         }
 
 
-        // Generate new 6-digit OTP
-
         const otp = Math.floor(
             100000 + Math.random() * 900000
         ).toString();
 
 
-        // OTP expires in 10 minutes
-
         user.verificationOTP = otp;
 
         user.verificationOTPExpires =
-            new Date(Date.now() + 10 * 60 * 1000);
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
 
 
         await user.save();
 
 
-        // Send email
-
         await transporter.sendMail({
 
-            from: `"EventGate" <${process.env.EMAIL_USER}>`,
+            from:
+                `"EventGate" <${process.env.EMAIL_USER}>`,
 
-            to: email,
+            to: normalizedEmail,
 
-            subject: "Your New EventGate Verification Code",
+            subject:
+                "Your New EventGate Verification Code",
 
             html: `
                 <div style="
@@ -457,19 +506,6 @@ const resendOTP = async (req, res) => {
                         you can safely ignore this email.
                     </p>
 
-                    <hr style="
-                        border: none;
-                        border-top: 1px solid #e5e7eb;
-                        margin: 25px 0;
-                    ">
-
-                    <p style="
-                        color: #94a3b8;
-                        font-size: 12px;
-                    ">
-                        © ${new Date().getFullYear()} EventGate
-                    </p>
-
                 </div>
             `
         });
@@ -477,7 +513,7 @@ const resendOTP = async (req, res) => {
 
         console.log(
             "New verification OTP sent to:",
-            email
+            normalizedEmail
         );
 
 
@@ -487,7 +523,6 @@ const resendOTP = async (req, res) => {
                 "A new verification code has been sent to your email."
 
         });
-
 
     } catch (error) {
 
@@ -518,12 +553,31 @@ const loginUser = async (req, res) => {
 
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email || !password) {
+
+            return res.status(400).json({
+                message:
+                    "Email and password are required."
+            });
+
+        }
+
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
+
 
         if (!user) {
 
             return res.status(400).json({
-                message: "Invalid email or password"
+                message:
+                    "Invalid email or password"
             });
 
         }
@@ -539,7 +593,8 @@ const loginUser = async (req, res) => {
         if (!isMatch) {
 
             return res.status(400).json({
-                message: "Invalid email or password"
+                message:
+                    "Invalid email or password"
             });
 
         }
@@ -558,25 +613,44 @@ const loginUser = async (req, res) => {
         }
 
 
-       const token = jwt.sign(
+        // Check JWT secret
+        if (!process.env.JWT_SECRET) {
 
-    {
-        id: user._id,
-        role: user.role
-    },
+            console.error(
+                "JWT_SECRET is missing from environment variables."
+            );
 
-    process.env.JWT_SECRET,
+            return res.status(500).json({
 
-    {
-        expiresIn: "1d"
-    }
+                message:
+                    "Server configuration error. Please try again later."
 
-);
+            });
+
+        }
+
+
+        const token =
+            jwt.sign(
+
+                {
+                    id: user._id,
+                    role: user.role
+                },
+
+                process.env.JWT_SECRET,
+
+                {
+                    expiresIn: "1d"
+                }
+
+            );
 
 
         res.status(200).json({
 
-            message: "Login successful",
+            message:
+                "Login successful",
 
             token,
 
@@ -596,7 +670,10 @@ const loginUser = async (req, res) => {
 
     } catch (error) {
 
-        console.error("Login error:", error);
+        console.error(
+            "Login error:",
+            error
+        );
 
         res.status(500).json({
 
@@ -609,40 +686,67 @@ const loginUser = async (req, res) => {
 
 };
 
+
 // =========================
 // FORGOT PASSWORD
 // =========================
 
 const forgotPassword = async (req, res) => {
+
     try {
+
         const { email } = req.body;
 
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({
-                message: "No account found with this email"
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required."
             });
         }
 
-        // Generate 6-digit OTP
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
+
+
+        if (!user) {
+
+            return res.status(404).json({
+                message:
+                    "No account found with this email"
+            });
+
+        }
+
+
         const otp = Math.floor(
             100000 + Math.random() * 900000
         ).toString();
 
-        // OTP expires in 10 minutes
+
         user.resetOTP = otp;
-        user.resetOTPExpires = new Date(
-            Date.now() + 10 * 60 * 1000
-        );
+
+        user.resetOTPExpires =
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
+
 
         await user.save();
 
-        // Send reset email
+
         await transporter.sendMail({
-            from: `"EventGate" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: "EventGate Password Reset Code",
+
+            from:
+                `"EventGate" <${process.env.EMAIL_USER}>`,
+
+            to: normalizedEmail,
+
+            subject:
+                "EventGate Password Reset Code",
 
             html: `
                 <div style="
@@ -697,35 +801,34 @@ const forgotPassword = async (req, res) => {
                         you can safely ignore this email.
                     </p>
 
-                    <hr style="
-                        border: none;
-                        border-top: 1px solid #e5e7eb;
-                        margin: 25px 0;
-                    ">
-
-                    <p style="
-                        color: #94a3b8;
-                        font-size: 12px;
-                    ">
-                        © ${new Date().getFullYear()} EventGate
-                    </p>
-
                 </div>
             `
         });
 
+
         res.status(200).json({
-            message: "Password reset code has been sent to your email"
+
+            message:
+                "Password reset code has been sent to your email"
+
         });
 
     } catch (error) {
 
-        console.error("Forgot password error:", error);
+        console.error(
+            "Forgot password error:",
+            error
+        );
 
         res.status(500).json({
-            message: "Something went wrong. Please try again."
+
+            message:
+                "Something went wrong. Please try again."
+
         });
+
     }
+
 };
 
 
@@ -734,48 +837,83 @@ const forgotPassword = async (req, res) => {
 // =========================
 
 const verifyResetOTP = async (req, res) => {
+
     try {
 
         const { email, otp } = req.body;
 
-        const user = await User.findOne({ email });
+        if (!email || !otp) {
+            return res.status(400).json({
+                message:
+                    "Email and reset code are required."
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
+
 
         if (!user) {
+
             return res.status(404).json({
-                message: "User not found"
+                message:
+                    "User not found"
             });
+
         }
 
-        // Check OTP
+
         if (user.resetOTP !== otp) {
+
             return res.status(400).json({
-                message: "Invalid reset code"
+                message:
+                    "Invalid reset code"
             });
+
         }
 
-        // Check expiration
+
         if (
             !user.resetOTPExpires ||
             user.resetOTPExpires < new Date()
         ) {
+
             return res.status(400).json({
                 message:
                     "Reset code has expired. Please request a new code."
             });
+
         }
 
+
         res.status(200).json({
-            message: "Reset code verified successfully"
+
+            message:
+                "Reset code verified successfully"
+
         });
 
     } catch (error) {
 
-        console.error("Verify reset OTP error:", error);
+        console.error(
+            "Verify reset OTP error:",
+            error
+        );
 
         res.status(500).json({
-            message: "Something went wrong. Please try again."
+
+            message:
+                "Something went wrong. Please try again."
+
         });
+
     }
+
 };
 
 
@@ -784,6 +922,7 @@ const verifyResetOTP = async (req, res) => {
 // =========================
 
 const resetPassword = async (req, res) => {
+
     try {
 
         const {
@@ -792,59 +931,120 @@ const resetPassword = async (req, res) => {
             newPassword
         } = req.body;
 
-        const user = await User.findOne({ email });
+
+        if (!email || !otp || !newPassword) {
+
+            return res.status(400).json({
+
+                message:
+                    "Email, reset code and new password are required."
+
+            });
+
+        }
+
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail
+            });
+
 
         if (!user) {
+
             return res.status(404).json({
-                message: "User not found"
+                message:
+                    "User not found"
             });
+
         }
 
-        // Check OTP
+
         if (user.resetOTP !== otp) {
+
             return res.status(400).json({
-                message: "Invalid reset code"
+                message:
+                    "Invalid reset code"
             });
+
         }
 
-        // Check expiration
+
         if (
             !user.resetOTPExpires ||
             user.resetOTPExpires < new Date()
         ) {
+
             return res.status(400).json({
+
                 message:
                     "Reset code has expired. Please request a new code."
+
             });
+
         }
 
-        // Hash new password
+
+        if (newPassword.length < 6) {
+
+            return res.status(400).json({
+
+                message:
+                    "Password must be at least 6 characters."
+
+            });
+
+        }
+
+
         const hashedPassword =
-            await bcrypt.hash(newPassword, 10);
+            await bcrypt.hash(
+                newPassword,
+                10
+            );
 
-        // Update password
-        user.password = hashedPassword;
 
-        // Clear reset OTP
-        user.resetOTP = undefined;
-        user.resetOTPExpires = undefined;
+        user.password =
+            hashedPassword;
+
+
+        user.resetOTP =
+            undefined;
+
+        user.resetOTPExpires =
+            undefined;
+
 
         await user.save();
 
+
         res.status(200).json({
+
             message:
                 "Password reset successfully. You can now login."
+
         });
 
     } catch (error) {
 
-        console.error("Reset password error:", error);
+        console.error(
+            "Reset password error:",
+            error
+        );
 
         res.status(500).json({
+
             message:
                 "Something went wrong. Please try again."
+
         });
+
     }
+
 };
 
 
@@ -853,11 +1053,19 @@ const resetPassword = async (req, res) => {
 // =========================
 
 module.exports = {
+
     registerUser,
+
     verifyOTP,
+
     resendOTP,
+
     loginUser,
+
     forgotPassword,
+
     verifyResetOTP,
+
     resetPassword
+
 };
