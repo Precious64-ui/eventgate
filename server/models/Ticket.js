@@ -5,19 +5,22 @@ const ticketSchema = new mongoose.Schema(
         ticketId: {
             type: String,
             unique: true,
-            required: true
+            required: true,
+            index: true
         },
 
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: true,
+            index: true
         },
 
         event: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Event",
-            required: true
+            required: true,
+            index: true
         },
 
         quantity: {
@@ -28,7 +31,8 @@ const ticketSchema = new mongoose.Schema(
 
         totalPrice: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         checkedIn: {

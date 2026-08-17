@@ -1,11 +1,31 @@
-const Event = require("../models/event")
+const Event = require("../models/event");
 const Ticket = require("../models/Ticket");
 const User = require("../models/User");
 
 // Create an event
 const createEvent = async (req, res) => {
     try {
-        const event = await Event.create(req.body);
+        const {
+            title,
+            description,
+            location,
+            date,
+            time,
+            price,
+            availableTickets,
+            image
+        } = req.body;
+
+        const event = await Event.create({
+            title,
+            description,
+            location,
+            date,
+            time,
+            price,
+            availableTickets,
+            image
+        });
 
         res.status(201).json({
             message: "Event created successfully",
@@ -36,7 +56,6 @@ const getEvents = async (req, res) => {
 // Get admin dashboard statistics
 const getAdminStats = async (req, res) => {
     try {
-
         const totalEvents = await Event.countDocuments();
 
         const totalUsers = await User.countDocuments();
@@ -44,12 +63,12 @@ const getAdminStats = async (req, res) => {
         const tickets = await Ticket.find();
 
         const totalTicketsSold = tickets.reduce(
-            (total, ticket) => total + ticket.quantity,
+            (total, ticket) => total + (Number(ticket.quantity) || 0),
             0
         );
 
         const totalRevenue = tickets.reduce(
-            (total, ticket) => total + ticket.totalPrice,
+            (total, ticket) => total + (Number(ticket.totalPrice) || 0),
             0
         );
 
@@ -61,13 +80,11 @@ const getAdminStats = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
             message: error.message
         });
-
     }
 };
 
@@ -101,7 +118,6 @@ const updateEvent = async (req, res) => {
     }
 };
 
-
 // Delete an event
 const deleteEvent = async (req, res) => {
     try {
@@ -127,7 +143,6 @@ const deleteEvent = async (req, res) => {
 // Get recent bookings for admin dashboard
 const getRecentBookings = async (req, res) => {
     try {
-
         const bookings = await Ticket.find()
             .populate("user", "name email")
             .populate("event", "title")
@@ -137,13 +152,11 @@ const getRecentBookings = async (req, res) => {
         res.status(200).json(bookings);
 
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
             message: error.message
         });
-
     }
 };
 

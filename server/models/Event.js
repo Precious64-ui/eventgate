@@ -4,17 +4,20 @@ const eventSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         description: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         location: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         date: {
@@ -24,22 +27,26 @@ const eventSchema = new mongoose.Schema(
 
         time: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
 
         price: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         availableTickets: {
             type: Number,
-            required: true
+            required: true,
+            min: 0
         },
 
         image: {
             type: String,
-            default: ""
+            default: "",
+            trim: true
         }
     },
     {

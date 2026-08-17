@@ -9,8 +9,7 @@ const {
     loginUser,
     forgotPassword,
     verifyResetOTP,
-    resetPassword,
-    testEmail
+    resetPassword
 } = require("../controllers/userController");
 
 
@@ -61,13 +60,6 @@ router.post("/verify-reset-otp", verifyResetOTP);
 // =========================
 
 router.post("/reset-password", resetPassword);
-
-
-// =========================
-// TEST RESEND EMAIL
-// =========================
-
-router.get("/test-email", testEmail);
 
 
 module.exports = router;

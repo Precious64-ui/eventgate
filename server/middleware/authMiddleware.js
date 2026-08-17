@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 
 const protect = (req, res, next) => {
     try {
-        // Get token from request headers
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -11,14 +10,21 @@ const protect = (req, res, next) => {
             });
         }
 
-        // Get the actual token
         const token = authHeader.split(" ")[1];
 
-        // Verify token
-        const decoded = jwt.verify(token, "mysecretkey");
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Add user information to request
-        req.user = decoded;
+        // Normalise the id so req.user.id and req.user._id both work
+        req.user = {
+            id: decoded.id || decoded._id,
+            role: decoded.role
+        };
+
+        if (!req.user.id) {
+            return res.status(401).json({
+                message: "Not authorized. Malformed token."
+            });
+        }
 
         next();
 

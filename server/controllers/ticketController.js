@@ -1,4 +1,3 @@
-
 const Ticket = require("../models/Ticket");
 const Event = require("../models/event");
 
@@ -8,7 +7,6 @@ const Event = require("../models/event");
 // =========================
 
 const generateTicketId = () => {
-
     const random = Math.random()
         .toString(36)
         .substring(2, 8)
@@ -23,103 +21,82 @@ const generateTicketId = () => {
 // =========================
 
 const bookTicket = async (req, res) => {
-
     try {
+        const { eventId } = req.body;
 
-        const { eventId, quantity } = req.body;
-
+        const quantity = Number(req.body.quantity);
 
         // Validate quantity
-
-        if (!quantity || quantity < 1) {
-
+        if (!Number.isInteger(quantity) || quantity < 1) {
             return res.status(400).json({
-                message: "Quantity must be at least 1"
+                message: "Quantity must be a whole number of at least 1"
             });
-
         }
 
-
         // Find event
-
         const event = await Event.findById(eventId);
 
-
         if (!event) {
-
             return res.status(404).json({
                 message: "Event not found"
             });
-
         }
 
+        // Atomically reserve the tickets.
+        // This only succeeds if enough tickets are still available,
+        // which prevents two simultaneous bookings from overselling.
+        const reserved = await Event.findOneAndUpdate(
+            {
+                _id: eventId,
+                availableTickets: { $gte: quantity }
+            },
+            {
+                $inc: { availableTickets: -quantity }
+            },
+            {
+                new: true
+            }
+        );
 
-        // Check available tickets
-
-        if (event.availableTickets < quantity) {
-
+        if (!reserved) {
             return res.status(400).json({
                 message: "Not enough tickets available"
             });
-
         }
 
+        const totalPrice = reserved.price * quantity;
 
-        // Calculate total price
+        try {
+            const ticket = await Ticket.create({
+                ticketId: generateTicketId(),
+                user: req.user.id,
+                event: eventId,
+                quantity,
+                totalPrice
+            });
 
-        const totalPrice = event.price * quantity;
+            res.status(201).json({
+                message: "Ticket booked successfully",
+                ticket
+            });
 
+        } catch (createError) {
 
-        // Generate ticket ID
+            // Creating the ticket failed after the seats were reserved,
+            // so give them back rather than losing them.
+            await Event.findByIdAndUpdate(eventId, {
+                $inc: { availableTickets: quantity }
+            });
 
-        const ticketId = generateTicketId();
-
-
-        // Create ticket
-
-        const ticket = await Ticket.create({
-
-            ticketId,
-
-            user: req.user.id,
-
-            event: eventId,
-
-            quantity,
-
-            totalPrice
-
-        });
-
-
-        // Reduce available tickets
-
-        event.availableTickets -= quantity;
-
-        await event.save();
-
-
-        // Send response
-
-        res.status(201).json({
-
-            message: "Ticket booked successfully",
-
-            ticket
-
-        });
-
+            throw createError;
+        }
 
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
-
             message: error.message
-
         });
-
     }
 };
 
@@ -129,32 +106,33 @@ const bookTicket = async (req, res) => {
 // =========================
 
 const getMyTickets = async (req, res) => {
-
     try {
-
         const tickets = await Ticket.find({
             user: req.user.id
         })
-        .populate("event")
-        .sort({
-            createdAt: -1
-        });
-
+            .populate("event")
+            .sort({ createdAt: -1 });
 
         res.status(200).json(tickets);
 
-
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
-
             message: error.message
-
         });
-
     }
+};
+
+
+// =========================
+// FIND A TICKET BY ITS PUBLIC ID
+// =========================
+
+const findTicket = (ticketId) => {
+    return Ticket.findOne({ ticketId })
+        .populate("event")
+        .populate("user", "name email");
 };
 
 
@@ -163,73 +141,33 @@ const getMyTickets = async (req, res) => {
 // =========================
 
 const verifyTicket = async (req, res) => {
-
     try {
-
-        const ticketId =
-            req.params.ticketId;
-
-
-        const ticket = await Ticket.findOne({
-            ticketId
-        })
-        .populate("event")
-        .populate("user", "name email");
-
-
-        // Ticket doesn't exist
+        const ticket = await findTicket(req.params.ticketId);
 
         if (!ticket) {
-
             return res.status(404).json({
-
-                message:
-                    "Invalid ticket. Ticket not found."
-
+                message: "Invalid ticket. Ticket not found."
             });
-
         }
-
-
-        // Ticket already checked in
 
         if (ticket.checkedIn) {
-
             return res.status(400).json({
-
-                message:
-                    "This ticket has already been checked in.",
-
+                message: "This ticket has already been checked in.",
                 ticket
-
             });
-
         }
 
-
-        // Ticket is valid
-
         res.status(200).json({
-
-            message:
-                "Ticket is valid",
-
+            message: "Ticket is valid",
             ticket
-
         });
 
-
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
-
-            message:
-                error.message
-
+            message: error.message
         });
-
     }
 };
 
@@ -239,81 +177,38 @@ const verifyTicket = async (req, res) => {
 // =========================
 
 const checkInTicket = async (req, res) => {
-
     try {
-
-        const ticketId =
-            req.params.ticketId;
-
-
-        const ticket = await Ticket.findOne({
-            ticketId
-        })
-        .populate("event")
-        .populate("user", "name email");
-
-
-        // Ticket doesn't exist
+        const ticket = await findTicket(req.params.ticketId);
 
         if (!ticket) {
-
             return res.status(404).json({
-
-                message:
-                    "Invalid ticket. Ticket not found."
-
+                message: "Invalid ticket. Ticket not found."
             });
-
         }
-
-
-        // Already checked in
 
         if (ticket.checkedIn) {
-
             return res.status(400).json({
-
-                message:
-                    "This ticket has already been checked in.",
-
+                message: "This ticket has already been checked in.",
                 ticket
-
             });
-
         }
 
-
-        // Mark ticket as checked in
-
         ticket.checkedIn = true;
-
         ticket.checkedInAt = new Date();
-
 
         await ticket.save();
 
-
         res.status(200).json({
-
-            message:
-                "Ticket checked in successfully.",
-
+            message: "Ticket checked in successfully.",
             ticket
-
         });
 
-
     } catch (error) {
-
         console.error(error);
 
         res.status(500).json({
-
-            message:
-                error.message
-
+            message: error.message
         });
-
     }
 };
 
@@ -323,13 +218,8 @@ const checkInTicket = async (req, res) => {
 // =========================
 
 module.exports = {
-
     bookTicket,
-
     getMyTickets,
-
     verifyTicket,
-
     checkInTicket
-
 };
