@@ -1,4 +1,5 @@
 const express = require("express");
+
 const router = express.Router();
 
 const {
@@ -8,8 +9,10 @@ const {
     loginUser,
     forgotPassword,
     verifyResetOTP,
-    resetPassword
+    resetPassword,
+    testEmail
 } = require("../controllers/userController");
+
 
 // =========================
 // REGISTER
@@ -23,8 +26,10 @@ router.post("/register", registerUser);
 // =========================
 
 router.post("/verify-otp", verifyOTP);
+
+
 // =========================
-// RESEND EMAIL OTP
+// RESEND OTP
 // =========================
 
 router.post("/resend-otp", resendOTP);
@@ -56,6 +61,13 @@ router.post("/verify-reset-otp", verifyResetOTP);
 // =========================
 
 router.post("/reset-password", resetPassword);
+
+
+// =========================
+// TEST RESEND EMAIL
+// =========================
+
+router.get("/test-email", testEmail);
 
 
 module.exports = router;

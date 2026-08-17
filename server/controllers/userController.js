@@ -1,31 +1,50 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 // =========================
-// EMAIL TRANSPORTER
+// SEND EMAIL
 // =========================
 
-const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+const sendEmail = async ({
+    to,
+    subject,
+    html
+}) => {
 
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
+    const { data, error } =
+        await resend.emails.send({
 
-// Check email configuration
-transporter.verify((error) => {
+            from:
+                "EventGate <onboarding@resend.dev>",
+
+            to: [to],
+
+            subject,
+
+            html
+
+        });
+
     if (error) {
-        console.error("Email configuration failed:", error);
-    } else {
-        console.log("Email server is ready!");
+
+        console.error(
+            "Resend email error:",
+            error
+        );
+
+        throw new Error(
+            error.message
+        );
+
     }
-});
+
+    return data;
+};
 
 
 // =========================
@@ -72,55 +91,52 @@ const registerUser = async (req, res) => {
 
                 await existingUser.save();
 
-                await transporter.sendMail({
+                await sendEmail({
 
-                    from:
-                        `"EventGate" <${process.env.EMAIL_USER}>`,
+    to: normalizedEmail,
 
-                    to: normalizedEmail,
+    subject:
+        "Your EventGate Verification Code",
 
-                    subject:
-                        "Your EventGate Verification Code",
+    html: `
+        <div style="
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        ">
 
-                    html: `
-                        <div style="
-                            font-family: Arial, sans-serif;
-                            max-width: 500px;
-                            margin: auto;
-                            padding: 30px;
-                            text-align: center;
-                            border: 1px solid #e5e7eb;
-                            border-radius: 12px;
-                        ">
+            <h2 style="color: #1e3a8a;">
+                Welcome to EventGate
+            </h2>
 
-                            <h2 style="color: #1e3a8a;">
-                                Welcome to EventGate
-                            </h2>
+            <p>
+                Your email verification code is:
+            </p>
 
-                            <p>
-                                Your email verification code is:
-                            </p>
+            <h1 style="
+                letter-spacing: 8px;
+                color: #1e3a8a;
+            ">
+                ${otp}
+            </h1>
 
-                            <h1 style="
-                                letter-spacing: 8px;
-                                color: #1e3a8a;
-                            ">
-                                ${otp}
-                            </h1>
+            <p>
+                This code will expire in
+                <strong>10 minutes</strong>.
+            </p>
 
-                            <p>
-                                This code will expire in
-                                <strong>10 minutes</strong>.
-                            </p>
+            <p style="color: #64748b;">
+                If you didn't create an EventGate account,
+                you can ignore this email.
+            </p>
 
-                            <p style="color: #64748b;">
-                                If you didn't create an EventGate account,
-                                you can ignore this email.
-                            </p>
-
-                        </div>
-                    `
-                });
+        </div>
+    `
+});
 
                 return res.status(200).json({
                     message:
@@ -171,86 +187,83 @@ const registerUser = async (req, res) => {
 
 
         // Send verification email
-        await transporter.sendMail({
+        await sendEmail({
 
-            from:
-                `"EventGate" <${process.env.EMAIL_USER}>`,
+    to: normalizedEmail,
 
-            to: normalizedEmail,
+    subject:
+        "Verify Your EventGate Account",
 
-            subject:
-                "Verify Your EventGate Account",
+    html: `
+        <div style="
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        ">
 
-            html: `
-                <div style="
-                    font-family: Arial, sans-serif;
-                    max-width: 500px;
-                    margin: auto;
-                    padding: 30px;
-                    text-align: center;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 12px;
+            <h2 style="color: #1e3a8a;">
+                Welcome to EventGate!
+            </h2>
+
+            <p>
+                Hi <strong>${name}</strong>,
+            </p>
+
+            <p>
+                Thank you for creating your EventGate account.
+                Use the verification code below to verify your email.
+            </p>
+
+            <div style="
+                margin: 25px 0;
+                padding: 18px;
+                background: #f8fafc;
+                border-radius: 10px;
+            ">
+
+                <h1 style="
+                    margin: 0;
+                    letter-spacing: 8px;
+                    color: #1e3a8a;
                 ">
+                    ${otp}
+                </h1>
 
-                    <h2 style="color: #1e3a8a;">
-                        Welcome to EventGate!
-                    </h2>
+            </div>
 
-                    <p>
-                        Hi <strong>${name}</strong>,
-                    </p>
+            <p>
+                This code expires in
+                <strong>10 minutes</strong>.
+            </p>
 
-                    <p>
-                        Thank you for creating your EventGate account.
-                        Use the verification code below to verify your email.
-                    </p>
+            <p style="
+                color: #64748b;
+                font-size: 13px;
+            ">
+                If you didn't create this account,
+                you can safely ignore this email.
+            </p>
 
-                    <div style="
-                        margin: 25px 0;
-                        padding: 18px;
-                        background: #f8fafc;
-                        border-radius: 10px;
-                    ">
+            <hr style="
+                border: none;
+                border-top: 1px solid #e5e7eb;
+                margin: 25px 0;
+            ">
 
-                        <h1 style="
-                            margin: 0;
-                            letter-spacing: 8px;
-                            color: #1e3a8a;
-                        ">
-                            ${otp}
-                        </h1>
+            <p style="
+                color: #94a3b8;
+                font-size: 12px;
+            ">
+                © ${new Date().getFullYear()} EventGate
+            </p>
 
-                    </div>
-
-                    <p>
-                        This code expires in
-                        <strong>10 minutes</strong>.
-                    </p>
-
-                    <p style="
-                        color: #64748b;
-                        font-size: 13px;
-                    ">
-                        If you didn't create this account,
-                        you can safely ignore this email.
-                    </p>
-
-                    <hr style="
-                        border: none;
-                        border-top: 1px solid #e5e7eb;
-                        margin: 25px 0;
-                    ">
-
-                    <p style="
-                        color: #94a3b8;
-                        font-size: 12px;
-                    ">
-                        © ${new Date().getFullYear()} EventGate
-                    </p>
-
-                </div>
-            `
-        });
+        </div>
+    `
+});
 
 
         res.status(201).json({
@@ -447,68 +460,65 @@ const resendOTP = async (req, res) => {
         await user.save();
 
 
-        await transporter.sendMail({
+        await sendEmail({
 
-            from:
-                `"EventGate" <${process.env.EMAIL_USER}>`,
+    to: normalizedEmail,
 
-            to: normalizedEmail,
+    subject:
+        "Your New EventGate Verification Code",
 
-            subject:
-                "Your New EventGate Verification Code",
+    html: `
+        <div style="
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        ">
 
-            html: `
-                <div style="
-                    font-family: Arial, sans-serif;
-                    max-width: 500px;
-                    margin: auto;
-                    padding: 30px;
-                    text-align: center;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 12px;
+            <h2 style="color: #1e3a8a;">
+                EventGate
+            </h2>
+
+            <p>
+                Here is your new verification code:
+            </p>
+
+            <div style="
+                margin: 25px 0;
+                padding: 18px;
+                background: #f8fafc;
+                border-radius: 10px;
+            ">
+
+                <h1 style="
+                    margin: 0;
+                    letter-spacing: 8px;
+                    color: #1e3a8a;
                 ">
+                    ${otp}
+                </h1>
 
-                    <h2 style="color: #1e3a8a;">
-                        EventGate
-                    </h2>
+            </div>
 
-                    <p>
-                        Here is your new verification code:
-                    </p>
+            <p>
+                This code expires in
+                <strong>10 minutes</strong>.
+            </p>
 
-                    <div style="
-                        margin: 25px 0;
-                        padding: 18px;
-                        background: #f8fafc;
-                        border-radius: 10px;
-                    ">
+            <p style="
+                color: #64748b;
+                font-size: 13px;
+            ">
+                If you didn't request a new code,
+                you can safely ignore this email.
+            </p>
 
-                        <h1 style="
-                            margin: 0;
-                            letter-spacing: 8px;
-                            color: #1e3a8a;
-                        ">
-                            ${otp}
-                        </h1>
-
-                    </div>
-
-                    <p>
-                        This code expires in
-                        <strong>10 minutes</strong>.
-                    </p>
-
-                    <p style="
-                        color: #64748b;
-                        font-size: 13px;
-                    ">
-                        If you didn't request a new code,
-                        you can safely ignore this email.
-                    </p>
-
-                </div>
-            `
-        });
+        </div>
+    `
+});
 
 
         console.log(
@@ -738,72 +748,69 @@ const forgotPassword = async (req, res) => {
         await user.save();
 
 
-        await transporter.sendMail({
+        await sendEmail({
 
-            from:
-                `"EventGate" <${process.env.EMAIL_USER}>`,
+    to: normalizedEmail,
 
-            to: normalizedEmail,
+    subject:
+        "EventGate Password Reset Code",
 
-            subject:
-                "EventGate Password Reset Code",
+    html: `
+        <div style="
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: auto;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        ">
 
-            html: `
-                <div style="
-                    font-family: Arial, sans-serif;
-                    max-width: 500px;
-                    margin: auto;
-                    padding: 30px;
-                    text-align: center;
-                    border: 1px solid #e5e7eb;
-                    border-radius: 12px;
+            <h2 style="color: #1e3a8a;">
+                Reset Your EventGate Password
+            </h2>
+
+            <p>
+                We received a request to reset your password.
+            </p>
+
+            <p>
+                Your password reset code is:
+            </p>
+
+            <div style="
+                margin: 25px 0;
+                padding: 18px;
+                background: #f8fafc;
+                border-radius: 10px;
+            ">
+
+                <h1 style="
+                    margin: 0;
+                    letter-spacing: 8px;
+                    color: #1e3a8a;
                 ">
+                    ${otp}
+                </h1>
 
-                    <h2 style="color: #1e3a8a;">
-                        Reset Your EventGate Password
-                    </h2>
+            </div>
 
-                    <p>
-                        We received a request to reset your password.
-                    </p>
+            <p>
+                This code expires in
+                <strong>10 minutes</strong>.
+            </p>
 
-                    <p>
-                        Your password reset code is:
-                    </p>
+            <p style="
+                color: #64748b;
+                font-size: 13px;
+            ">
+                If you didn't request a password reset,
+                you can safely ignore this email.
+            </p>
 
-                    <div style="
-                        margin: 25px 0;
-                        padding: 18px;
-                        background: #f8fafc;
-                        border-radius: 10px;
-                    ">
-
-                        <h1 style="
-                            margin: 0;
-                            letter-spacing: 8px;
-                            color: #1e3a8a;
-                        ">
-                            ${otp}
-                        </h1>
-
-                    </div>
-
-                    <p>
-                        This code expires in
-                        <strong>10 minutes</strong>.
-                    </p>
-
-                    <p style="
-                        color: #64748b;
-                        font-size: 13px;
-                    ">
-                        If you didn't request a password reset,
-                        you can safely ignore this email.
-                    </p>
-
-                </div>
-            `
-        });
+        </div>
+    `
+});
 
 
         res.status(200).json({
@@ -1048,24 +1055,51 @@ const resetPassword = async (req, res) => {
 };
 
 
+const testEmail = async (req, res) => {
+    try {
+        const { data, error } = await resend.emails.send({
+            from: "EventGate <onboarding@resend.dev>",
+            to: ["iwuchukwuprecious64@gmail.com"],
+            subject: "EventGate Email Test",
+            html: `
+                <h2>EventGate Email Test</h2>
+                <p>If you're seeing this, Resend is working correctly.</p>
+            `
+        });
+
+        if (error) {
+            console.error("Resend error:", error);
+
+            return res.status(400).json({
+                message: error.message
+            });
+        }
+
+        res.status(200).json({
+            message: "Test email sent successfully",
+            data
+        });
+
+    } catch (error) {
+        console.error("Email test error:", error);
+
+        res.status(500).json({
+            message: error.message
+        });
+    }
+};
+
 // =========================
 // EXPORT
 // =========================
 
 module.exports = {
-
     registerUser,
-
     verifyOTP,
-
     resendOTP,
-
     loginUser,
-
     forgotPassword,
-
     verifyResetOTP,
-
-    resetPassword
-
+    resetPassword,
+    testEmail
 };
