@@ -1,49 +1,30 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// =========================
+// DEMO MODE
+// =========================
+// For your capstone deployment, keep this true.
+// No real email service is required.
+//
+// When you eventually have a verified email service,
+// change this to false and add a real email provider.
+
+const DEMO_MODE =
+    process.env.DEMO_MODE !== "false";
 
 
 // =========================
-// SEND EMAIL
+// GENERATE OTP
 // =========================
 
-const sendEmail = async ({
-    to,
-    subject,
-    html
-}) => {
+const generateOTP = () => {
 
-    const { data, error } =
-        await resend.emails.send({
+    return Math.floor(
+        100000 + Math.random() * 900000
+    ).toString();
 
-            from:
-                "EventGate <onboarding@resend.dev>",
-
-            to: [to],
-
-            subject,
-
-            html
-
-        });
-
-    if (error) {
-
-        console.error(
-            "Resend email error:",
-            error
-        );
-
-        throw new Error(
-            error.message
-        );
-
-    }
-
-    return data;
 };
 
 
@@ -55,233 +36,194 @@ const registerUser = async (req, res) => {
 
     try {
 
-        const { name, email, password } = req.body;
+        const {
+            name,
+            email,
+            password
+        } = req.body;
+
 
         // Basic validation
         if (!name || !email || !password) {
+
             return res.status(400).json({
-                message: "Please provide name, email and password."
+
+                message:
+                    "Please provide name, email and password."
+
             });
+
         }
+
+
+        if (password.length < 6) {
+
+            return res.status(400).json({
+
+                message:
+                    "Password must be at least 6 characters."
+
+            });
+
+        }
+
 
         const normalizedEmail =
             email.trim().toLowerCase();
 
-        // Check if user already exists
+
+        // Check existing user
         const existingUser =
             await User.findOne({
+
                 email: normalizedEmail
+
             });
+
+
+        // =========================
+        // EXISTING USER
+        // =========================
 
         if (existingUser) {
 
-            // Allow unverified user to request a new OTP
+            // Existing but not verified
             if (!existingUser.isVerified) {
 
-                const otp = Math.floor(
-                    100000 + Math.random() * 900000
-                ).toString();
+                const otp = generateOTP();
 
-                existingUser.verificationOTP = otp;
+
+                existingUser.verificationOTP =
+                    otp;
 
                 existingUser.verificationOTPExpires =
                     new Date(
-                        Date.now() + 10 * 60 * 1000
+                        Date.now() +
+                        10 * 60 * 1000
                     );
+
 
                 await existingUser.save();
 
-                await sendEmail({
 
-    to: normalizedEmail,
+                console.log(
+                    `Demo verification OTP for ${normalizedEmail}: ${otp}`
+                );
 
-    subject:
-        "Your EventGate Verification Code",
-
-    html: `
-        <div style="
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: auto;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-        ">
-
-            <h2 style="color: #1e3a8a;">
-                Welcome to EventGate
-            </h2>
-
-            <p>
-                Your email verification code is:
-            </p>
-
-            <h1 style="
-                letter-spacing: 8px;
-                color: #1e3a8a;
-            ">
-                ${otp}
-            </h1>
-
-            <p>
-                This code will expire in
-                <strong>10 minutes</strong>.
-            </p>
-
-            <p style="color: #64748b;">
-                If you didn't create an EventGate account,
-                you can ignore this email.
-            </p>
-
-        </div>
-    `
-});
 
                 return res.status(200).json({
+
                     message:
-                        "Your account is not verified. A new verification code has been sent to your email."
+                        `Your account is not verified. Your verification code is: ${otp}`,
+
+                    demoMode: true,
+
+                    demoOTP: otp
+
                 });
+
             }
 
+
+            // Existing and verified
             return res.status(400).json({
-                message: "Email already exists"
+
+                message:
+                    "Email already exists"
+
             });
+
         }
 
 
-        // Hash password
+        // =========================
+        // HASH PASSWORD
+        // =========================
+
         const hashedPassword =
-            await bcrypt.hash(password, 10);
-
-
-        // Generate 6-digit OTP
-        const otp = Math.floor(
-            100000 + Math.random() * 900000
-        ).toString();
-
-
-        // OTP expires in 10 minutes
-        const otpExpires =
-            new Date(
-                Date.now() + 10 * 60 * 1000
+            await bcrypt.hash(
+                password,
+                10
             );
 
 
-        // Create user
-        const user = await User.create({
+        // =========================
+        // GENERATE OTP
+        // =========================
 
-            name,
-
-            email: normalizedEmail,
-
-            password: hashedPassword,
-
-            isVerified: false,
-
-            verificationOTP: otp,
-
-            verificationOTPExpires: otpExpires
-
-        });
+        const otp =
+            generateOTP();
 
 
-        // Send verification email
-        await sendEmail({
-
-    to: normalizedEmail,
-
-    subject:
-        "Verify Your EventGate Account",
-
-    html: `
-        <div style="
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: auto;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-        ">
-
-            <h2 style="color: #1e3a8a;">
-                Welcome to EventGate!
-            </h2>
-
-            <p>
-                Hi <strong>${name}</strong>,
-            </p>
-
-            <p>
-                Thank you for creating your EventGate account.
-                Use the verification code below to verify your email.
-            </p>
-
-            <div style="
-                margin: 25px 0;
-                padding: 18px;
-                background: #f8fafc;
-                border-radius: 10px;
-            ">
-
-                <h1 style="
-                    margin: 0;
-                    letter-spacing: 8px;
-                    color: #1e3a8a;
-                ">
-                    ${otp}
-                </h1>
-
-            </div>
-
-            <p>
-                This code expires in
-                <strong>10 minutes</strong>.
-            </p>
-
-            <p style="
-                color: #64748b;
-                font-size: 13px;
-            ">
-                If you didn't create this account,
-                you can safely ignore this email.
-            </p>
-
-            <hr style="
-                border: none;
-                border-top: 1px solid #e5e7eb;
-                margin: 25px 0;
-            ">
-
-            <p style="
-                color: #94a3b8;
-                font-size: 12px;
-            ">
-                © ${new Date().getFullYear()} EventGate
-            </p>
-
-        </div>
-    `
-});
+        const otpExpires =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
 
 
-        res.status(201).json({
+        // =========================
+        // CREATE USER
+        // =========================
+
+        const user =
+            await User.create({
+
+                name,
+
+                email:
+                    normalizedEmail,
+
+                password:
+                    hashedPassword,
+
+                isVerified:
+                    false,
+
+                verificationOTP:
+                    otp,
+
+                verificationOTPExpires:
+                    otpExpires
+
+            });
+
+
+        console.log(
+            `Demo verification OTP for ${normalizedEmail}: ${otp}`
+        );
+
+
+        // =========================
+        // RESPONSE
+        // =========================
+
+        return res.status(201).json({
 
             message:
-                "Registration successful. A verification code has been sent to your email.",
+                `Registration successful. Your verification code is: ${otp}`,
 
             user: {
 
-                id: user._id,
+                id:
+                    user._id,
 
-                name: user.name,
+                name:
+                    user.name,
 
-                email: user.email
+                email:
+                    user.email
 
-            }
+            },
+
+            demoMode:
+                true,
+
+            demoOTP:
+                otp
 
         });
+
 
     } catch (error) {
 
@@ -290,7 +232,8 @@ const registerUser = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Registration failed. Please try again."
@@ -310,27 +253,44 @@ const verifyOTP = async (req, res) => {
 
     try {
 
-        const { email, otp } = req.body;
+        const {
+            email,
+            otp
+        } = req.body;
+
 
         if (!email || !otp) {
+
             return res.status(400).json({
+
                 message:
                     "Email and verification code are required."
+
             });
+
         }
+
 
         const normalizedEmail =
             email.trim().toLowerCase();
 
+
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
+
 
         if (!user) {
 
             return res.status(404).json({
-                message: "User not found"
+
+                message:
+                    "User not found"
+
             });
 
         }
@@ -339,7 +299,10 @@ const verifyOTP = async (req, res) => {
         if (user.isVerified) {
 
             return res.status(400).json({
-                message: "Email is already verified"
+
+                message:
+                    "Email is already verified"
+
             });
 
         }
@@ -348,7 +311,10 @@ const verifyOTP = async (req, res) => {
         if (user.verificationOTP !== otp) {
 
             return res.status(400).json({
-                message: "Invalid verification code"
+
+                message:
+                    "Invalid verification code"
+
             });
 
         }
@@ -360,28 +326,34 @@ const verifyOTP = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 message:
                     "Verification code has expired. Please request a new code."
+
             });
 
         }
 
 
+        // Verify account
         user.isVerified = true;
 
         user.verificationOTP = undefined;
 
-        user.verificationOTPExpires = undefined;
+        user.verificationOTPExpires =
+            undefined;
+
 
         await user.save();
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
                 "Email verified successfully. You can now login."
 
         });
+
 
     } catch (error) {
 
@@ -390,7 +362,8 @@ const verifyOTP = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Verification failed. Please try again."
@@ -410,26 +383,43 @@ const resendOTP = async (req, res) => {
 
     try {
 
-        const { email } = req.body;
+        const {
+            email
+        } = req.body;
+
 
         if (!email) {
+
             return res.status(400).json({
-                message: "Email is required."
+
+                message:
+                    "Email is required."
+
             });
+
         }
+
 
         const normalizedEmail =
             email.trim().toLowerCase();
 
+
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
+
 
         if (!user) {
 
             return res.status(404).json({
-                message: "User not found"
+
+                message:
+                    "User not found"
+
             });
 
         }
@@ -438,101 +428,50 @@ const resendOTP = async (req, res) => {
         if (user.isVerified) {
 
             return res.status(400).json({
-                message: "Email is already verified."
+
+                message:
+                    "Email is already verified."
+
             });
 
         }
 
 
-        const otp = Math.floor(
-            100000 + Math.random() * 900000
-        ).toString();
+        const otp =
+            generateOTP();
 
 
-        user.verificationOTP = otp;
+        user.verificationOTP =
+            otp;
 
         user.verificationOTPExpires =
             new Date(
-                Date.now() + 10 * 60 * 1000
+                Date.now() +
+                10 * 60 * 1000
             );
 
 
         await user.save();
 
 
-        await sendEmail({
-
-    to: normalizedEmail,
-
-    subject:
-        "Your New EventGate Verification Code",
-
-    html: `
-        <div style="
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: auto;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-        ">
-
-            <h2 style="color: #1e3a8a;">
-                EventGate
-            </h2>
-
-            <p>
-                Here is your new verification code:
-            </p>
-
-            <div style="
-                margin: 25px 0;
-                padding: 18px;
-                background: #f8fafc;
-                border-radius: 10px;
-            ">
-
-                <h1 style="
-                    margin: 0;
-                    letter-spacing: 8px;
-                    color: #1e3a8a;
-                ">
-                    ${otp}
-                </h1>
-
-            </div>
-
-            <p>
-                This code expires in
-                <strong>10 minutes</strong>.
-            </p>
-
-            <p style="
-                color: #64748b;
-                font-size: 13px;
-            ">
-                If you didn't request a new code,
-                you can safely ignore this email.
-            </p>
-
-        </div>
-    `
-});
-
-
         console.log(
-            "New verification OTP sent to:",
-            normalizedEmail
+            `New demo verification OTP for ${normalizedEmail}: ${otp}`
         );
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
-                "A new verification code has been sent to your email."
+                `Your new verification code is: ${otp}`,
+
+            demoMode:
+                true,
+
+            demoOTP:
+                otp
 
         });
+
 
     } catch (error) {
 
@@ -541,7 +480,8 @@ const resendOTP = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Unable to resend verification code. Please try again."
@@ -561,13 +501,19 @@ const loginUser = async (req, res) => {
 
     try {
 
-        const { email, password } = req.body;
+        const {
+            email,
+            password
+        } = req.body;
+
 
         if (!email || !password) {
 
             return res.status(400).json({
+
                 message:
                     "Email and password are required."
+
             });
 
         }
@@ -579,15 +525,20 @@ const loginUser = async (req, res) => {
 
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
 
 
         if (!user) {
 
             return res.status(400).json({
+
                 message:
                     "Invalid email or password"
+
             });
 
         }
@@ -603,14 +554,15 @@ const loginUser = async (req, res) => {
         if (!isMatch) {
 
             return res.status(400).json({
+
                 message:
                     "Invalid email or password"
+
             });
 
         }
 
 
-        // Require email verification
         if (!user.isVerified) {
 
             return res.status(403).json({
@@ -623,12 +575,12 @@ const loginUser = async (req, res) => {
         }
 
 
-        // Check JWT secret
         if (!process.env.JWT_SECRET) {
 
             console.error(
                 "JWT_SECRET is missing from environment variables."
             );
+
 
             return res.status(500).json({
 
@@ -644,20 +596,25 @@ const loginUser = async (req, res) => {
             jwt.sign(
 
                 {
-                    id: user._id,
-                    role: user.role
+                    id:
+                        user._id,
+
+                    role:
+                        user.role
+
                 },
 
                 process.env.JWT_SECRET,
 
                 {
-                    expiresIn: "1d"
+                    expiresIn:
+                        "1d"
                 }
 
             );
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
                 "Login successful",
@@ -666,17 +623,22 @@ const loginUser = async (req, res) => {
 
             user: {
 
-                id: user._id,
+                id:
+                    user._id,
 
-                name: user.name,
+                name:
+                    user.name,
 
-                email: user.email,
+                email:
+                    user.email,
 
-                role: user.role
+                role:
+                    user.role
 
             }
 
         });
+
 
     } catch (error) {
 
@@ -685,7 +647,8 @@ const loginUser = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Login failed. Please try again."
@@ -705,120 +668,83 @@ const forgotPassword = async (req, res) => {
 
     try {
 
-        const { email } = req.body;
+        const {
+            email
+        } = req.body;
+
 
         if (!email) {
+
             return res.status(400).json({
-                message: "Email is required."
+
+                message:
+                    "Email is required."
+
             });
+
         }
+
 
         const normalizedEmail =
             email.trim().toLowerCase();
 
+
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
 
 
         if (!user) {
 
             return res.status(404).json({
+
                 message:
                     "No account found with this email"
+
             });
 
         }
 
 
-        const otp = Math.floor(
-            100000 + Math.random() * 900000
-        ).toString();
+        const otp =
+            generateOTP();
 
 
-        user.resetOTP = otp;
+        user.resetOTP =
+            otp;
 
         user.resetOTPExpires =
             new Date(
-                Date.now() + 10 * 60 * 1000
+                Date.now() +
+                10 * 60 * 1000
             );
 
 
         await user.save();
 
 
-        await sendEmail({
-
-    to: normalizedEmail,
-
-    subject:
-        "EventGate Password Reset Code",
-
-    html: `
-        <div style="
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: auto;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-        ">
-
-            <h2 style="color: #1e3a8a;">
-                Reset Your EventGate Password
-            </h2>
-
-            <p>
-                We received a request to reset your password.
-            </p>
-
-            <p>
-                Your password reset code is:
-            </p>
-
-            <div style="
-                margin: 25px 0;
-                padding: 18px;
-                background: #f8fafc;
-                border-radius: 10px;
-            ">
-
-                <h1 style="
-                    margin: 0;
-                    letter-spacing: 8px;
-                    color: #1e3a8a;
-                ">
-                    ${otp}
-                </h1>
-
-            </div>
-
-            <p>
-                This code expires in
-                <strong>10 minutes</strong>.
-            </p>
-
-            <p style="
-                color: #64748b;
-                font-size: 13px;
-            ">
-                If you didn't request a password reset,
-                you can safely ignore this email.
-            </p>
-
-        </div>
-    `
-});
+        console.log(
+            `Demo password reset OTP for ${normalizedEmail}: ${otp}`
+        );
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
-                "Password reset code has been sent to your email"
+                `Password reset code generated. Your reset code is: ${otp}`,
+
+            demoMode:
+                true,
+
+            demoOTP:
+                otp
 
         });
+
 
     } catch (error) {
 
@@ -827,7 +753,8 @@ const forgotPassword = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Something went wrong. Please try again."
@@ -847,29 +774,44 @@ const verifyResetOTP = async (req, res) => {
 
     try {
 
-        const { email, otp } = req.body;
+        const {
+            email,
+            otp
+        } = req.body;
+
 
         if (!email || !otp) {
+
             return res.status(400).json({
+
                 message:
                     "Email and reset code are required."
+
             });
+
         }
+
 
         const normalizedEmail =
             email.trim().toLowerCase();
 
+
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
 
 
         if (!user) {
 
             return res.status(404).json({
+
                 message:
                     "User not found"
+
             });
 
         }
@@ -878,8 +820,10 @@ const verifyResetOTP = async (req, res) => {
         if (user.resetOTP !== otp) {
 
             return res.status(400).json({
+
                 message:
                     "Invalid reset code"
+
             });
 
         }
@@ -891,19 +835,22 @@ const verifyResetOTP = async (req, res) => {
         ) {
 
             return res.status(400).json({
+
                 message:
                     "Reset code has expired. Please request a new code."
+
             });
 
         }
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
                 "Reset code verified successfully"
 
         });
+
 
     } catch (error) {
 
@@ -912,7 +859,8 @@ const verifyResetOTP = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Something went wrong. Please try again."
@@ -939,12 +887,28 @@ const resetPassword = async (req, res) => {
         } = req.body;
 
 
-        if (!email || !otp || !newPassword) {
+        if (
+            !email ||
+            !otp ||
+            !newPassword
+        ) {
 
             return res.status(400).json({
 
                 message:
                     "Email, reset code and new password are required."
+
+            });
+
+        }
+
+
+        if (newPassword.length < 6) {
+
+            return res.status(400).json({
+
+                message:
+                    "Password must be at least 6 characters."
 
             });
 
@@ -957,15 +921,20 @@ const resetPassword = async (req, res) => {
 
         const user =
             await User.findOne({
-                email: normalizedEmail
+
+                email:
+                    normalizedEmail
+
             });
 
 
         if (!user) {
 
             return res.status(404).json({
+
                 message:
                     "User not found"
+
             });
 
         }
@@ -974,8 +943,10 @@ const resetPassword = async (req, res) => {
         if (user.resetOTP !== otp) {
 
             return res.status(400).json({
+
                 message:
                     "Invalid reset code"
+
             });
 
         }
@@ -996,18 +967,6 @@ const resetPassword = async (req, res) => {
         }
 
 
-        if (newPassword.length < 6) {
-
-            return res.status(400).json({
-
-                message:
-                    "Password must be at least 6 characters."
-
-            });
-
-        }
-
-
         const hashedPassword =
             await bcrypt.hash(
                 newPassword,
@@ -1017,7 +976,6 @@ const resetPassword = async (req, res) => {
 
         user.password =
             hashedPassword;
-
 
         user.resetOTP =
             undefined;
@@ -1029,12 +987,13 @@ const resetPassword = async (req, res) => {
         await user.save();
 
 
-        res.status(200).json({
+        return res.status(200).json({
 
             message:
                 "Password reset successfully. You can now login."
 
         });
+
 
     } catch (error) {
 
@@ -1043,7 +1002,8 @@ const resetPassword = async (req, res) => {
             error
         );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             message:
                 "Something went wrong. Please try again."
@@ -1055,51 +1015,46 @@ const resetPassword = async (req, res) => {
 };
 
 
+// =========================
+// TEST EMAIL
+// =========================
+// No real email service is used in demo mode.
+
 const testEmail = async (req, res) => {
-    try {
-        const { data, error } = await resend.emails.send({
-            from: "EventGate <onboarding@resend.dev>",
-            to: ["iwuchukwuprecious64@gmail.com"],
-            subject: "EventGate Email Test",
-            html: `
-                <h2>EventGate Email Test</h2>
-                <p>If you're seeing this, Resend is working correctly.</p>
-            `
-        });
 
-        if (error) {
-            console.error("Resend error:", error);
+    return res.status(200).json({
 
-            return res.status(400).json({
-                message: error.message
-            });
-        }
+        message:
+            "EventGate demo mode is active. Real email delivery is disabled.",
 
-        res.status(200).json({
-            message: "Test email sent successfully",
-            data
-        });
+        demoMode:
+            true
 
-    } catch (error) {
-        console.error("Email test error:", error);
+    });
 
-        res.status(500).json({
-            message: error.message
-        });
-    }
 };
+
 
 // =========================
 // EXPORT
 // =========================
 
 module.exports = {
+
     registerUser,
+
     verifyOTP,
+
     resendOTP,
+
     loginUser,
+
     forgotPassword,
+
     verifyResetOTP,
+
     resetPassword,
+
     testEmail
+
 };
