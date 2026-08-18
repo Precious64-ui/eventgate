@@ -1,3 +1,4 @@
+const sendOTPEmail = require("../utils/sendEmail");
 const crypto = require("crypto");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
@@ -6,10 +7,8 @@ const jwt = require("jsonwebtoken");
 // =========================
 // DEMO MODE
 // =========================
-// When DEMO_MODE is "true", the OTP is included in the API response
-// so the flow can be demonstrated without an email provider.
+// When DEMO_MODE is "true", the OTP is included in the API response.
 // This is INSECURE and defaults to OFF.
-// Normally the OTP is written to the server logs only.
 
 const DEMO_MODE = process.env.DEMO_MODE === "true";
 
@@ -70,6 +69,14 @@ const registerUser = async (req, res) => {
 
             console.log(`Verification OTP for ${normalizedEmail}: ${otp}`);
 
+            await sendOTPEmail(
+                normalizedEmail,
+                "Verify your EventGate account",
+                "Confirm your email",
+                otp,
+                `Hello ${existingUser.name}, use the code below to activate your account.`
+            );
+
             return res.status(200).json(
                 withDemoOTP({
                     message: "This account is not yet verified. A new verification code has been issued."
@@ -97,6 +104,14 @@ const registerUser = async (req, res) => {
         });
 
         console.log(`Verification OTP for ${normalizedEmail}: ${otp}`);
+
+        await sendOTPEmail(
+            normalizedEmail,
+            "Verify your EventGate account",
+            "Confirm your email",
+            otp,
+            `Hello ${user.name}, use the code below to activate your account.`
+        );
 
         return res.status(201).json(
             withDemoOTP({
@@ -212,6 +227,14 @@ const resendOTP = async (req, res) => {
         await user.save();
 
         console.log(`New verification OTP for ${normalizedEmail}: ${otp}`);
+
+        await sendOTPEmail(
+            normalizedEmail,
+            "Your new EventGate verification code",
+            "New verification code",
+            otp,
+            "Here is your new verification code."
+        );
 
         return res.status(200).json(
             withDemoOTP({
@@ -338,6 +361,14 @@ const forgotPassword = async (req, res) => {
         await user.save();
 
         console.log(`Password reset OTP for ${normalizedEmail}: ${otp}`);
+
+        await sendOTPEmail(
+            normalizedEmail,
+            "Reset your EventGate password",
+            "Password reset code",
+            otp,
+            "Use the code below to reset your password."
+        );
 
         return res.status(200).json(
             withDemoOTP({
