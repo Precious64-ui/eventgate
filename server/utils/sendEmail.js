@@ -1,5 +1,3 @@
-const brevo = require("@getbrevo/brevo");
-
 // Sends an OTP email through the Brevo HTTP API.
 // Returns true on success, false on failure.
 // It never throws, so an email problem cannot break
@@ -35,35 +33,42 @@ const sendOTPEmail = async (to, subject, heading, otp, intro) => {
             return false;
         }
 
-        const apiInstance = new brevo.TransactionalEmailsApi();
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
 
-        apiInstance.setApiKey(
-            brevo.TransactionalEmailsApiApiKeys.apiKey,
-            process.env.BREVO_API_KEY
-        );
+            headers: {
+                "accept": "application/json",
+                "api-key": process.env.BREVO_API_KEY,
+                "content-type": "application/json"
+            },
 
-        const message = new brevo.SendSmtpEmail();
+            body: JSON.stringify({
+                sender: {
+                    name: "EventGate",
+                    email: process.env.BREVO_SENDER_EMAIL
+                },
+                to: [{ email: to }],
+                subject,
+                htmlContent: html
+            })
+        });
 
-        message.subject = subject;
-        message.htmlContent = html;
+        if (!response.ok) {
+            const details = await response.text();
 
-        message.sender = {
-            name: "EventGate",
-            email: process.env.BREVO_SENDER_EMAIL
-        };
+            console.error(
+                `Email delivery failed (${response.status}):`,
+                details
+            );
 
-        message.to = [{ email: to }];
-
-        await apiInstance.sendTransacEmail(message);
+            return false;
+        }
 
         console.log(`Email sent to ${to}`);
         return true;
 
     } catch (error) {
-        console.error(
-            "Email delivery failed:",
-            error?.response?.body?.message || error.message
-        );
+        console.error("Email error:", error.message);
         return false;
     }
 };
