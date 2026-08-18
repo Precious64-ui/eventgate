@@ -1,9 +1,18 @@
+const API = "https://eventgate-fxp8.onrender.com/api";
+
 const form = document.getElementById("eventForm");
 const message = document.getElementById("message");
 const logoutBtn = document.getElementById("logoutBtn");
 
 const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user"));
+
+let user = null;
+
+try {
+    user = JSON.parse(localStorage.getItem("user"));
+} catch (err) {
+    user = null;
+}
 
 
 // =========================
@@ -34,25 +43,40 @@ if (menuToggle && navLinks) {
 // =========================
 // ADMIN ACCESS PROTECTION
 // =========================
+// Redirecting alone does not stop the script, so the throw
+// prevents the rest of the page from running and firing
+// unauthorised API requests.
 
-if (!token || !user || user.role !== "admin") {
-    window.location.href = "index.html";
-}
-
-// Check if logged in
 if (!token) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
+    throw new Error("Not authenticated");
 }
 
-// Logout
-logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+if (!user || user.role !== "admin") {
+    window.location.replace("index.html");
+    throw new Error("Not authorised");
+}
 
-    window.location.href = "login.html";
-});
 
-// Create event
+// =========================
+// LOGOUT
+// =========================
+
+if (logoutBtn) {
+
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
+        window.location.replace("login.html");
+    });
+}
+
+
+// =========================
+// CREATE EVENT
+// =========================
+
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -70,56 +94,58 @@ form.addEventListener("submit", async (e) => {
     };
 
     try {
-        const response = await fetch(
-            "https://eventgate-fxp8.onrender.com/api/events",
-            {
-                method: "POST",
+        const response = await fetch(`${API}/events`, {
+            method: "POST",
 
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
 
-                body: JSON.stringify(eventData)
-            }
-        );
+            body: JSON.stringify(eventData)
+        });
 
         const data = await response.json();
 
         if (response.ok) {
-
             message.style.color = "green";
             message.innerText = "Event created successfully!";
 
             form.reset();
 
+            loadAdminEvents();
+            loadAdminStats();
+
         } else {
-
             message.style.color = "red";
-            message.innerText = data.message;
-
+            message.innerText = data.message || "Unable to create event.";
         }
 
     } catch (error) {
-
         console.error(error);
 
         message.style.color = "red";
         message.innerText = "Something went wrong.";
-
     }
 });
-// Manage Events
+
+
+// =========================
+// MANAGE EVENTS
+// =========================
+
 const adminEvents = document.getElementById("adminEvents");
 
-// Load all events
 async function loadAdminEvents() {
     try {
-        const response = await fetch(
-            "https://eventgate-fxp8.onrender.com/api/events"
-        );
+        const response = await fetch(`${API}/events`);
 
         const events = await response.json();
+
+        if (!response.ok || !Array.isArray(events)) {
+            adminEvents.innerHTML = "<p>Unable to load events.</p>";
+            return;
+        }
 
         adminEvents.innerHTML = "";
 
@@ -134,61 +160,55 @@ async function loadAdminEvents() {
             eventCard.classList.add("admin-event-card");
 
             eventCard.innerHTML = `
-    <img
-        src="${event.image || "https://picsum.photos/500/300"}"
-        alt="${event.title}"
-        class="admin-event-image"
-    >
+                <img
+                    src="${event.image || "https://picsum.photos/500/300"}"
+                    alt="${event.title}"
+                    class="admin-event-image"
+                >
 
-  <div class="admin-event-content">
+                <div class="admin-event-content">
 
-    <h3>${event.title}</h3>
+                    <h3>${event.title}</h3>
 
-    <p>
-        <i class="fa-solid fa-location-dot"></i>
-        ${event.location}
-    </p>
+                    <p>
+                        <i class="fa-solid fa-location-dot"></i>
+                        ${event.location}
+                    </p>
 
-    <p>
-        <i class="fa-regular fa-calendar"></i>
-        ${new Date(event.date).toLocaleDateString()}
-    </p>
+                    <p>
+                        <i class="fa-regular fa-calendar"></i>
+                        ${new Date(event.date).toLocaleDateString()}
+                    </p>
 
-    <p>
-        <i class="fa-regular fa-clock"></i>
-        ${event.time}
-    </p>
+                    <p>
+                        <i class="fa-regular fa-clock"></i>
+                        ${event.time}
+                    </p>
 
-    <p>
-        <i class="fa-solid fa-naira-sign"></i>
-        ₦${Number(event.price).toLocaleString()}
-    </p>
+                    <p>
+                        <i class="fa-solid fa-tag"></i>
+                        ₦${Number(event.price).toLocaleString()}
+                    </p>
 
-    <p>
-        <i class="fa-solid fa-ticket"></i>
-        ${event.availableTickets} tickets available
-    </p>
+                    <p>
+                        <i class="fa-solid fa-ticket"></i>
+                        ${event.availableTickets} tickets available
+                    </p>
 
-    <div class="event-actions">
+                    <div class="event-actions">
 
-        <button
-            class="edit-btn"
-            data-id="${event._id}"
-        >
-            Edit
-        </button>
+                        <button class="edit-btn" data-id="${event._id}">
+                            Edit
+                        </button>
 
-        <button
-            class="delete-btn"
-            data-id="${event._id}"
-        >
-            Delete
-        </button>
+                        <button class="delete-btn" data-id="${event._id}">
+                            Delete
+                        </button>
 
-    </div>
+                    </div>
 
-</div>
-`;
+                </div>
+            `;
 
             adminEvents.appendChild(eventCard);
         });
@@ -196,121 +216,123 @@ async function loadAdminEvents() {
     } catch (error) {
         console.error(error);
 
-        adminEvents.innerHTML =
-            "<p>Unable to load events.</p>";
+        adminEvents.innerHTML = "<p>Unable to load events.</p>";
     }
 }
 
 loadAdminEvents();
 
-// Delete event
+// =========================
+// DELETE AND EDIT HANDLERS
+// =========================
+
 adminEvents.addEventListener("click", async (e) => {
 
-    if (!e.target.classList.contains("delete-btn")) {
-        return;
-    }
+    // ----- DELETE -----
+    if (e.target.classList.contains("delete-btn")) {
 
-    const eventId = e.target.dataset.id;
+        const eventId = e.target.dataset.id;
 
-    const confirmDelete = confirm(
-        "Are you sure you want to delete this event?"
-    );
+        const confirmDelete = confirm(
+            "Are you sure you want to delete this event?"
+        );
 
-    if (!confirmDelete) {
-        return;
-    }
+        if (!confirmDelete) {
+            return;
+        }
 
-    try {
-
-        const response = await fetch(
-            `https://eventgate-fxp8.onrender.com/api/events/${eventId}`,
-            {
+        try {
+            const response = await fetch(`${API}/events/${eventId}`, {
                 method: "DELETE",
 
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Event deleted successfully!");
+
+                loadAdminEvents();
+                loadAdminStats();
+
+            } else {
+                alert(data.message || "Unable to delete event.");
             }
-        );
 
-        const data = await response.json();
+        } catch (error) {
+            console.error(error);
 
-        if (response.ok) {
-
-            alert("Event deleted successfully!");
-
-            loadAdminEvents();
-
-        } else {
-
-            alert(data.message || "Unable to delete event.");
-
+            alert("Something went wrong.");
         }
 
-    } catch (error) {
-
-        console.error(error);
-
-        alert("Something went wrong.");
-    }
-});
-
-// Edit event
-adminEvents.addEventListener("click", async (e) => {
-
-    if (!e.target.classList.contains("edit-btn")) {
         return;
     }
 
-    const eventId = e.target.dataset.id;
 
-    try {
+    // ----- EDIT -----
+    if (e.target.classList.contains("edit-btn")) {
 
-        const response = await fetch(
-            "https://eventgate-fxp8.onrender.com/api/events"
-        );
+        const eventId = e.target.dataset.id;
 
-        const events = await response.json();
+        try {
+            const response = await fetch(`${API}/events`);
 
-        const event = events.find(
-            item => item._id === eventId
-        );
+            const events = await response.json();
 
-        if (!event) {
-            alert("Event not found.");
-            return;
+            if (!Array.isArray(events)) {
+                alert("Unable to load event.");
+                return;
+            }
+
+            const event = events.find(item => item._id === eventId);
+
+            if (!event) {
+                alert("Event not found.");
+                return;
+            }
+
+            document.getElementById("editSection").style.display = "block";
+
+            document.getElementById("editId").value = event._id;
+            document.getElementById("editTitle").value = event.title;
+            document.getElementById("editDescription").value = event.description;
+            document.getElementById("editLocation").value = event.location;
+
+            // Convert to a local date string so the date does not
+            // shift by a day in timezones ahead of UTC.
+            const d = new Date(event.date);
+
+            document.getElementById("editDate").value =
+                new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+                    .toISOString()
+                    .split("T")[0];
+
+            document.getElementById("editTime").value = event.time;
+            document.getElementById("editPrice").value = event.price;
+            document.getElementById("editAvailableTickets").value =
+                event.availableTickets;
+            document.getElementById("editImage").value = event.image || "";
+
+            document.getElementById("editSection").scrollIntoView({
+                behavior: "smooth"
+            });
+
+        } catch (error) {
+            console.error(error);
+
+            alert("Unable to load event.");
         }
-
-        // Show edit form
-        document.getElementById("editSection").style.display = "block";
-
-        // Fill the form
-        document.getElementById("editId").value = event._id;
-        document.getElementById("editTitle").value = event.title;
-        document.getElementById("editDescription").value = event.description;
-        document.getElementById("editLocation").value = event.location;
-        document.getElementById("editDate").value =
-            new Date(event.date).toISOString().split("T")[0];
-        document.getElementById("editTime").value = event.time;
-        document.getElementById("editPrice").value = event.price;
-        document.getElementById("editAvailableTickets").value =
-            event.availableTickets;
-        document.getElementById("editImage").value = event.image || "";
-
-        // Scroll to edit form
-        document.getElementById("editSection").scrollIntoView({
-            behavior: "smooth"
-        });
-
-    } catch (error) {
-
-        console.error(error);
-
-        alert("Unable to load event.");
     }
 });
 
-// Update event
+
+// =========================
+// UPDATE EVENT
+// =========================
+
 const editEventForm = document.getElementById("editEventForm");
 const cancelEdit = document.getElementById("cancelEdit");
 
@@ -318,6 +340,7 @@ editEventForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const eventId = document.getElementById("editId").value;
+    const editMessage = document.getElementById("editMessage");
 
     const updatedEvent = {
         title: document.getElementById("editTitle").value,
@@ -333,56 +356,45 @@ editEventForm.addEventListener("submit", async (e) => {
     };
 
     try {
+        const response = await fetch(`${API}/events/${eventId}`, {
+            method: "PUT",
 
-        const response = await fetch(
-            `https://eventgate-fxp8.onrender.com/api/events/${eventId}`,
-            {
-                method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
 
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-
-                body: JSON.stringify(updatedEvent)
-            }
-        );
+            body: JSON.stringify(updatedEvent)
+        });
 
         const data = await response.json();
 
         if (response.ok) {
+            editMessage.style.color = "green";
+            editMessage.innerText = "Event updated successfully!";
 
-            document.getElementById("editMessage").style.color = "green";
-            document.getElementById("editMessage").innerText =
-                "Event updated successfully!";
-
-            // Refresh event list
             loadAdminEvents();
+            loadAdminStats();
 
-            // Hide edit form after a short delay
             setTimeout(() => {
                 document.getElementById("editSection").style.display = "none";
+                editMessage.innerText = "";
             }, 1000);
 
         } else {
-
-            document.getElementById("editMessage").style.color = "red";
-            document.getElementById("editMessage").innerText =
-                data.message || "Unable to update event.";
+            editMessage.style.color = "red";
+            editMessage.innerText = data.message || "Unable to update event.";
         }
 
     } catch (error) {
-
         console.error(error);
 
-        document.getElementById("editMessage").style.color = "red";
-        document.getElementById("editMessage").innerText =
-            "Something went wrong.";
+        editMessage.style.color = "red";
+        editMessage.innerText = "Something went wrong.";
     }
 });
 
 
-// Cancel editing
 cancelEdit.addEventListener("click", () => {
 
     document.getElementById("editSection").style.display = "none";
@@ -392,6 +404,7 @@ cancelEdit.addEventListener("click", () => {
     document.getElementById("editMessage").innerText = "";
 });
 
+
 // =========================
 // LOAD ADMIN STATISTICS
 // =========================
@@ -399,15 +412,11 @@ cancelEdit.addEventListener("click", () => {
 async function loadAdminStats() {
 
     try {
-
-        const response = await fetch(
-            "https://eventgate-fxp8.onrender.com/api/events/admin-stats",
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+        const response = await fetch(`${API}/events/admin-stats`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
             }
-        );
+        });
 
         const data = await response.json();
 
@@ -415,7 +424,6 @@ async function loadAdminStats() {
             console.error(data.message);
             return;
         }
-
 
         document.getElementById("totalEvents").innerText =
             data.totalEvents;
@@ -429,18 +437,13 @@ async function loadAdminStats() {
         document.getElementById("totalRevenue").innerText =
             `₦${Number(data.totalRevenue).toLocaleString()}`;
 
-
     } catch (error) {
-
-        console.error(
-            "Unable to load admin statistics:",
-            error
-        );
-
+        console.error("Unable to load admin statistics:", error);
     }
 }
 
 loadAdminStats();
+
 
 // =========================
 // LOAD RECENT BOOKINGS
@@ -448,59 +451,42 @@ loadAdminStats();
 
 async function loadRecentBookings() {
 
-    const container =
-        document.getElementById("recentBookingsList");
+    const container = document.getElementById("recentBookingsList");
 
     try {
-
-        const response = await fetch(
-            "https://eventgate-fxp8.onrender.com/api/events/recent-bookings",
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+        const response = await fetch(`${API}/events/recent-bookings`, {
+            headers: {
+                "Authorization": `Bearer ${token}`
             }
-        );
+        });
 
+        const bookings = await response.json();
 
-        const bookings =
-            await response.json();
-
-
-        if (!response.ok) {
-
+        if (!response.ok || !Array.isArray(bookings)) {
             container.innerHTML = `
                 <p class="booking-error">
                     Unable to load recent bookings.
                 </p>
             `;
-
             return;
         }
 
-
         if (bookings.length === 0) {
-
             container.innerHTML = `
                 <p class="no-bookings">
                     No bookings yet.
                 </p>
             `;
-
             return;
         }
 
-
         container.innerHTML = "";
-
 
         bookings.forEach(ticket => {
 
-            const booking =
-                document.createElement("div");
+            const booking = document.createElement("div");
 
             booking.classList.add("booking-row");
-
 
             booking.innerHTML = `
 
@@ -533,27 +519,21 @@ async function loadRecentBookings() {
                 <div class="booking-amount">
 
                     <strong>
-                        ₦${Number(ticket.totalPrice)
-                            .toLocaleString()}
+                        ₦${Number(ticket.totalPrice).toLocaleString()}
                     </strong>
 
                     <span>
-                        ${new Date(ticket.createdAt)
-                            .toLocaleDateString()}
+                        ${new Date(ticket.createdAt).toLocaleDateString()}
                     </span>
 
                 </div>
 
             `;
 
-
             container.appendChild(booking);
-
         });
 
-
     } catch (error) {
-
         console.error(error);
 
         container.innerHTML = `
@@ -561,9 +541,7 @@ async function loadRecentBookings() {
                 Unable to connect to the server.
             </p>
         `;
-
     }
 }
-
 
 loadRecentBookings();

@@ -6,7 +6,14 @@ const searchInput = document.getElementById("searchInput");
 const locationFilter = document.getElementById("locationFilter");
 
 const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user"));
+
+let user = null;
+
+try {
+    user = JSON.parse(localStorage.getItem("user"));
+} catch (err) {
+    user = null;
+}
 
 let allEvents = [];
 
@@ -17,24 +24,22 @@ let allEvents = [];
 const menuToggle = document.getElementById("menuToggle");
 const navLinks = document.getElementById("navLinks");
 
-menuToggle.addEventListener("click", () => {
-    menuToggle.classList.toggle("active");
-    navLinks.classList.toggle("active");
-});
+if (menuToggle && navLinks) {
 
-
-// Close menu when a link is clicked
-
-navLinks.querySelectorAll("a").forEach(link => {
-
-    link.addEventListener("click", () => {
-
-        menuToggle.classList.remove("active");
-        navLinks.classList.remove("active");
-
+    menuToggle.addEventListener("click", () => {
+        menuToggle.classList.toggle("active");
+        navLinks.classList.toggle("active");
     });
 
-});
+    navLinks.querySelectorAll("a").forEach(link => {
+
+        link.addEventListener("click", () => {
+            menuToggle.classList.remove("active");
+            navLinks.classList.remove("active");
+        });
+
+    });
+}
 
 
 // =========================
@@ -42,16 +47,25 @@ navLinks.querySelectorAll("a").forEach(link => {
 // =========================
 
 if (!token) {
-    window.location.href = "login.html";
+    window.location.replace("login.html");
+    throw new Error("Not authenticated");
 }
 
 
 // =========================
 // ADMIN LINK
 // =========================
+// Hidden for non-admins. This is presentation only — the real
+// protection is the admin guard on admin.html and the backend
+// middleware, which reject unauthorised requests regardless.
 
-if (user && user.role === "admin") {
-    adminLink.style.display = "inline-block";
+if (adminLink) {
+
+    if (user && user.role === "admin") {
+        adminLink.style.display = "inline-block";
+    } else {
+        adminLink.style.display = "none";
+    }
 }
 
 
